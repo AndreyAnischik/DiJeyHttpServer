@@ -7,18 +7,16 @@ public class FTPConnection implements Runnable{
     private FTPServer ftpServer = null;
     private Socket socket = null;
 
-    public FTPConnection(FTPServer server, Socket socket){
+    public FTPConnection(FTPServer server, Socket socket) {
         this.ftpServer = server;
         this.socket = socket;
     }
 
     @Override
-    public void run() {
+    public void run() {}
 
-    }
-
-    public void stop(){
-        if(!Thread.currentThread().isInterrupted()){
+    public void stop() {
+        if(!Thread.currentThread().isInterrupted()) {
             Thread.currentThread().interrupt();
         }
         try {

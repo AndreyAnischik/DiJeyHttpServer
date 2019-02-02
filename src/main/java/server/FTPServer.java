@@ -27,7 +27,7 @@ public class FTPServer
             Thread.currentThread().interrupt();
         }
 
-        for(FTPConnection session: connectionsManager.getConnection()){
+        for(FTPConnection session: connectionsManager.getConnection()) {
             session.stop();
         }
 

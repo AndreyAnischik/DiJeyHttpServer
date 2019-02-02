@@ -18,8 +18,7 @@ public class UserUI implements Initializable {
 
 
     @Override
-    public void initialize(URL location, ResourceBundle resources) {
-    }
+    public void initialize(URL location, ResourceBundle resources) {}
 
     @FXML
     private void run() {
@@ -42,10 +41,10 @@ public class UserUI implements Initializable {
 
     @FXML
     private void stop() {
-        if(FTPServer.isRunning()){
+        if(FTPServer.isRunning()) {
             ftpServer.stop();
             ftpServer = null;
-        }else{
+        } else {
             //сервер уже остановлен
         }
     }
