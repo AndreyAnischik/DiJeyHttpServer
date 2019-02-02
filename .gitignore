@@ -21,3 +21,6 @@
 # Maven
 log/
 target/
+
+# Environment variables
+.env
