@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
 
-public class FTPServer
+public class HttpServer
     implements Runnable{
     private static boolean running = false;
     private ServerSocket serverSocket = null;
@@ -12,7 +12,7 @@ public class FTPServer
 
     private ConnectionManager connectionsManager = null;
 
-    public FTPServer() throws IOException {
+    public HttpServer() throws IOException {
         serverSocket = new ServerSocket();
         connectionsManager = new ConnectionManager();
         database = new Database();
@@ -27,7 +27,7 @@ public class FTPServer
             Thread.currentThread().interrupt();
         }
 
-        for(FTPConnection session: connectionsManager.getConnection()) {
+        for(HttpConnection session: connectionsManager.getConnection()) {
             session.stop();
         }
 
@@ -44,7 +44,7 @@ public class FTPServer
         while (running) {
             try {
                 Socket client = serverSocket.accept();
-                FTPConnection session = new FTPConnection(this,client);
+                HttpConnection session = new HttpConnection(this,client);
                 connectionsManager.add(session);
                 new Thread(session).start();
             } catch (IOException e) {

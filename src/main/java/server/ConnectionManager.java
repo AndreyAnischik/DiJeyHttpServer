@@ -4,17 +4,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ConnectionManager {
-    private List<FTPConnection> connection = new ArrayList<>();
+    private List<HttpConnection> connection = new ArrayList<>();
 
-    public void add(FTPConnection ftpConnection){
-        connection.add(ftpConnection);
+    public void add(HttpConnection httpConnection){
+        connection.add(httpConnection);
     }
 
-    public void remove(FTPConnection ftpConnection){
-        connection.remove(ftpConnection);
+    public void remove(HttpConnection httpConnection){
+        connection.remove(httpConnection);
     }
 
-    public List<FTPConnection> getConnection(){
+    public List<HttpConnection> getConnection(){
         return connection;
     }
 

@@ -3,12 +3,12 @@ package server;
 import java.io.IOException;
 import java.net.Socket;
 
-public class FTPConnection implements Runnable{
-    private FTPServer ftpServer = null;
+public class HttpConnection implements Runnable {
+    private HttpServer httpServer = null;
     private Socket socket = null;
 
-    public FTPConnection(FTPServer server, Socket socket) {
-        this.ftpServer = server;
+    public HttpConnection(HttpServer server, Socket socket) {
+        this.httpServer = server;
         this.socket = socket;
     }
 

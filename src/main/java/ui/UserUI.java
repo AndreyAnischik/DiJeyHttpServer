@@ -3,7 +3,7 @@ package ui;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TextField;
-import server.FTPServer;
+import server.HttpServer;
 
 import java.io.IOException;
 import java.net.URL;
@@ -11,7 +11,7 @@ import java.util.ResourceBundle;
 import java.util.regex.Pattern;
 
 public class UserUI implements Initializable {
-    private FTPServer ftpServer;
+    private HttpServer httpServer;
 
     @FXML
     private TextField serverPort;
@@ -24,14 +24,14 @@ public class UserUI implements Initializable {
     private void run() {
         if (isValidPort()) {
             System.out.println("Is valid");
-            if (ftpServer == null) {
+            if (httpServer == null) {
                 try {
-                    ftpServer = new FTPServer();
-                    new Thread(ftpServer).start();
+                    httpServer = new HttpServer();
+                    new Thread(httpServer).start();
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
-            }else {
+            } else {
 
             }
         } else {
@@ -41,15 +41,15 @@ public class UserUI implements Initializable {
 
     @FXML
     private void stop() {
-        if(FTPServer.isRunning()) {
-            ftpServer.stop();
-            ftpServer = null;
+        if(HttpServer.isRunning()) {
+            httpServer.stop();
+            httpServer = null;
         } else {
             //сервер уже остановлен
         }
     }
 
-    private boolean isValidPort(){
+    private boolean isValidPort() {
         Pattern pattern = Pattern.compile("(([0-9]{1,4})|([1-5][0-9]{4})|(6[0-4][0-9]{3})|(65[0-4][0-9]{2})|(655[0-2][0-9])|(6553[0-5]))");
         return pattern.matcher(serverPort.getText()).matches();
     }
