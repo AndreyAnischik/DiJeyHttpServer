@@ -1,13 +1,13 @@
 package server;
 
+import io.github.cdimascio.dotenv.Dotenv;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.Statement;
-import io.github.cdimascio.dotenv.Dotenv;
-
 
 public class Database {
-    Dotenv dotenv = Dotenv.configure().directory("./").load();
+    private Dotenv dotenv = Dotenv.configure().directory("./").load();
 
     private String url = dotenv.get("URL");
     private String username = dotenv.get("USERNAME");

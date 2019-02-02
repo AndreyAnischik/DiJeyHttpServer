@@ -4,8 +4,8 @@ import java.io.IOException;
 import java.net.Socket;
 
 public class HttpConnection implements Runnable {
-    private HttpServer httpServer = null;
-    private Socket socket = null;
+    private HttpServer httpServer;
+    private Socket socket;
 
     public HttpConnection(HttpServer server, Socket socket) {
         this.httpServer = server;
@@ -13,10 +13,11 @@ public class HttpConnection implements Runnable {
     }
 
     @Override
-    public void run() {}
+    public void run() {
+    }
 
     public void stop() {
-        if(!Thread.currentThread().isInterrupted()) {
+        if (!Thread.currentThread().isInterrupted()) {
             Thread.currentThread().interrupt();
         }
         try {

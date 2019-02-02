@@ -4,21 +4,21 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ConnectionManager {
-    private List<HttpConnection> connection = new ArrayList<>();
+    private List<HttpConnection> connections = new ArrayList<>();
 
-    public void add(HttpConnection httpConnection){
-        connection.add(httpConnection);
+    public void add(HttpConnection httpConnection) {
+        connections.add(httpConnection);
     }
 
-    public void remove(HttpConnection httpConnection){
-        connection.remove(httpConnection);
+    public void remove(HttpConnection httpConnection) {
+        connections.remove(httpConnection);
     }
 
-    public List<HttpConnection> getConnection(){
-        return connection;
+    public List<HttpConnection> getConnections() {
+        return connections;
     }
 
-    public void removeAll(){
-        connection.clear();
+    public void removeAll() {
+        connections.clear();
     }
 }
