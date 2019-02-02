@@ -10,15 +10,15 @@
 
 <AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="519.0" xmlns="http://javafx.com/javafx/8.0.172-ea" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ui.UserUI">
     <children>
-        <Button fx:id="startButton" layoutX="254.0" layoutY="22.0" mnemonicParsing="false" onAction="#run" prefHeight="27.0" prefWidth="63.0" text="Start" />
-        <Button fx:id="stopButton" layoutX="335.0" layoutY="22.0" mnemonicParsing="false" onAction="#run" prefHeight="27.0" prefWidth="63.0" text="Stop" />
+        <Button fx:id="start" layoutX="254.0" layoutY="22.0" mnemonicParsing="false" onAction="#start" prefHeight="27.0" prefWidth="63.0" text="Start" />
+        <Button fx:id="stop" layoutX="335.0" layoutY="22.0" mnemonicParsing="false" onAction="#stop" prefHeight="27.0" prefWidth="63.0" text="Stop" />
         <TextField fx:id="serverPort" layoutX="53.0" layoutY="22.0" prefHeight="27.0" prefWidth="179.0" />
         <Label layoutX="17.0" layoutY="27.0" text="Port" />
         <TabPane fx:id="tabbedLog" layoutX="17.0" layoutY="66.0" prefHeight="308.0" prefWidth="440.0" tabClosingPolicy="UNAVAILABLE">
             <tabs>
                 <Tab text="Memo logs">
                     <content>
-                        <TextArea fx:id="log" editable="false" layoutX="-2.0" layoutY="-2.0" prefHeight="275.0" prefWidth="456.0" />
+                        <TextArea fx:id="logArea" editable="false" layoutX="-2.0" layoutY="-2.0" prefHeight="275.0" prefWidth="456.0" />
                     </content>
                 </Tab>
             </tabs>
