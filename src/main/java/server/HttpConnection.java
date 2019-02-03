@@ -39,6 +39,7 @@ public class HttpConnection implements Runnable {
                 case Constants.HEAD:
                     break;
                 default:
+                    sendNotImplemented();
                     break;
             }
         } catch (IOException exception) {
@@ -47,7 +48,6 @@ public class HttpConnection implements Runnable {
             try {
                 clientData.close();
                 serverData.close();
-                socket.close();
                 dataOut.close();
             } catch (IOException e) {
                 e.printStackTrace();
@@ -64,6 +64,20 @@ public class HttpConnection implements Runnable {
 
         byte[] fileData = readFileData(sendingFile, fileLength);
         composeResponse(Constants.OK, content, fileLength);
+
+        dataOut.write(fileData, 0, fileLength);
+        dataOut.flush();
+    }
+
+    private void sendNotImplemented() throws IOException {
+        String notImplemented = Constants.NOT_IMPLEMENTED_PAGE;
+
+        File sendingFile = new File(Constants.CONTENT_DIRECTORY, notImplemented);
+        int fileLength = (int) sendingFile.length();
+        String content = getContentType(notImplemented);
+
+        byte[] fileData = readFileData(sendingFile, fileLength);
+        composeResponse(Constants.NOT_IMPLEMENTED, content, fileLength);
 
         dataOut.write(fileData, 0, fileLength);
         dataOut.flush();
@@ -104,7 +118,6 @@ public class HttpConnection implements Runnable {
         }
 
         return fileData;
-
     }
 
     private String getContentType(String file) {
@@ -114,5 +127,4 @@ public class HttpConnection implements Runnable {
             return "text/plain";
         }
     }
-
 }
