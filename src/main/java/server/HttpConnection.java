@@ -9,6 +9,11 @@ public class HttpConnection implements Runnable {
     private HttpServer httpServer;
     private Socket socket;
 
+    private BufferedReader clientData = null;
+    private PrintWriter serverData = null;
+    private BufferedOutputStream dataOut = null;
+    private String fileName = null;
+
     public HttpConnection(HttpServer server, Socket socket) {
         this.httpServer = server;
         this.socket = socket;
@@ -16,52 +21,62 @@ public class HttpConnection implements Runnable {
 
     @Override
     public void run() {
-        BufferedReader in = null;
-        PrintWriter out = null;
-        BufferedOutputStream dataOut = null;
-        String file = null;
-
         try {
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(socket.getOutputStream());
+            clientData = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            serverData = new PrintWriter(socket.getOutputStream());
             dataOut = new BufferedOutputStream(socket.getOutputStream());
 
-            String input = in.readLine();
-            StringTokenizer parse = new StringTokenizer(input);
-            String method = parse.nextToken().toUpperCase();
+            String input = clientData.readLine();
+            StringTokenizer parsedData = new StringTokenizer(input);
+            String method = parsedData.nextToken().toUpperCase();
 
-            file = parse.nextToken().toLowerCase();
-
-
-            File sendingFile = new File("./", file.substring(1));
-            int fileLength = (int) sendingFile.length();
-            String content = getContentType(file);
-
-            byte[] fileData = readFileData(sendingFile, fileLength);
-
-            out.println("HTTP/1.1 200 OK");
-            out.println("Server: Java http server by DiJey");
-            out.println("Date: " + new Date());
-            out.println("Content-type: " + content);
-            out.println("Content-length: " + fileLength);
-            out.println();
-            out.flush();
-
-            dataOut.write(fileData, 0, fileLength);
-            dataOut.flush();
-
+            switch (method) {
+                case Constants.GET:
+                    get(parsedData);
+                    break;
+                case Constants.POST:
+                    break;
+                case Constants.HEAD:
+                    break;
+                default:
+                    break;
+            }
         } catch (IOException exception) {
             exception.printStackTrace();
         } finally {
             try {
-                in.close();
-                out.close();
+                clientData.close();
+                serverData.close();
                 socket.close();
                 dataOut.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         }
+    }
+
+    private void get(StringTokenizer parsedData) throws IOException {
+        fileName = parsedData.nextToken().toLowerCase();
+
+        File sendingFile = new File(Constants.CONTENT_DIRECTORY, fileName);
+        int fileLength = (int) sendingFile.length();
+        String content = getContentType(fileName);
+
+        byte[] fileData = readFileData(sendingFile, fileLength);
+        composeResponse(Constants.OK, content, fileLength);
+
+        dataOut.write(fileData, 0, fileLength);
+        dataOut.flush();
+    }
+
+    private void composeResponse(String code, String content, int fileLength) {
+        serverData.println("HTTP/1.1 " + code);
+        serverData.println("Server: Java http server by DiJey");
+        serverData.println("Date: " + new Date());
+        serverData.println("Content-type: " + content);
+        serverData.println("Content-length: " + fileLength);
+        serverData.println();
+        serverData.flush();
     }
 
     public void stop() {
@@ -93,6 +108,11 @@ public class HttpConnection implements Runnable {
     }
 
     private String getContentType(String file) {
-        return "text/html";
+        if (file.endsWith(".htm") || file.endsWith(".html")) {
+            return "text/html";
+        } else {
+            return "text/plain";
+        }
     }
+
 }

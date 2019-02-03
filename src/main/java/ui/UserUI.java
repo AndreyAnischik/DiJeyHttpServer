@@ -36,7 +36,7 @@ public class UserUI {
 
     @FXML
     private void stop() {
-        if (HttpServer.isRunning()) {
+        if (httpServer.isRunning()) {
             httpServer.stop();
             httpServer = null;
         } else {
