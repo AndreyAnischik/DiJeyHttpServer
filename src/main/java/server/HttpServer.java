@@ -9,7 +9,7 @@ import java.net.Socket;
 public class HttpServer {
     private Dotenv dotenv = Dotenv.configure().directory("./").load();
 
-    private static boolean running = false;
+    private boolean running = false;
     private ServerSocket serverSocket;
     private ConnectionManager connectionsManager;
 
@@ -20,7 +20,7 @@ public class HttpServer {
         runServer();
     }
 
-    public static boolean isRunning() {
+    public boolean isRunning() {
         return running;
     }
 
