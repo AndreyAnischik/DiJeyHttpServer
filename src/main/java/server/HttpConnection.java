@@ -57,27 +57,21 @@ public class HttpConnection implements Runnable {
 
     private void get(StringTokenizer parsedData) throws IOException {
         fileName = parsedData.nextToken().toLowerCase();
-
-        File sendingFile = new File(Constants.CONTENT_DIRECTORY, fileName);
-        int fileLength = (int) sendingFile.length();
-        String content = getContentType(fileName);
-
-        byte[] fileData = readFileData(sendingFile, fileLength);
-        composeResponse(Constants.OK, content, fileLength);
-
-        dataOut.write(fileData, 0, fileLength);
-        dataOut.flush();
+        setDataToResponse(Constants.OK, fileName);
     }
 
     private void sendNotImplemented() throws IOException {
         String notImplemented = Constants.NOT_IMPLEMENTED_PAGE;
+        setDataToResponse(Constants.NOT_IMPLEMENTED, notImplemented);
+    }
 
-        File sendingFile = new File(Constants.CONTENT_DIRECTORY, notImplemented);
+    private void setDataToResponse(String code, String file) throws IOException {
+        File sendingFile = new File(Constants.CONTENT_DIRECTORY, file);
         int fileLength = (int) sendingFile.length();
-        String content = getContentType(notImplemented);
+        String content = getContentType(file);
 
         byte[] fileData = readFileData(sendingFile, fileLength);
-        composeResponse(Constants.NOT_IMPLEMENTED, content, fileLength);
+        composeResponse(code, content, fileLength);
 
         dataOut.write(fileData, 0, fileLength);
         dataOut.flush();
@@ -126,5 +120,9 @@ public class HttpConnection implements Runnable {
         } else {
             return "text/plain";
         }
+    }
+
+    public String getFileName() {
+        return this.fileName;
     }
 }
