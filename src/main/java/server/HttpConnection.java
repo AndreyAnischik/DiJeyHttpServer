@@ -21,36 +21,30 @@ public class HttpConnection implements Runnable {
 
     @Override
     public void run() {
-        try {
-            clientData = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            serverData = new PrintWriter(socket.getOutputStream());
-            dataOut = new BufferedOutputStream(socket.getOutputStream());
-
-            String input = clientData.readLine();
-            StringTokenizer parsedData = new StringTokenizer(input);
-            String method = parsedData.nextToken().toUpperCase();
-
-            switch (method) {
-                case Constants.GET:
-                    get(parsedData);
-                    break;
-                case Constants.POST:
-                    break;
-                case Constants.HEAD:
-                    break;
-                default:
-                    sendNotImplemented();
-                    break;
-            }
-        } catch (IOException exception) {
-            exception.printStackTrace();
-        } finally {
+        while(true) {
             try {
-                clientData.close();
-                serverData.close();
-                dataOut.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+                clientData = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                serverData = new PrintWriter(socket.getOutputStream());
+                dataOut = new BufferedOutputStream(socket.getOutputStream());
+
+                String input = clientData.readLine();
+                StringTokenizer parsedData = new StringTokenizer(input);
+                String method = parsedData.nextToken().toUpperCase();
+
+                switch (method) {
+                    case Constants.GET:
+                        get(parsedData);
+                        break;
+                    case Constants.POST:
+                        break;
+                    case Constants.HEAD:
+                        break;
+                    default:
+                        sendNotImplemented();
+                        break;
+                }
+            } catch (IOException exception) {
+                exception.printStackTrace();
             }
         }
     }
@@ -91,7 +85,11 @@ public class HttpConnection implements Runnable {
         if (!Thread.currentThread().isInterrupted()) {
             Thread.currentThread().interrupt();
         }
+
         try {
+            clientData.close();
+            serverData.close();
+            dataOut.close();
             socket.close();
         } catch (IOException e) {
             e.printStackTrace();
