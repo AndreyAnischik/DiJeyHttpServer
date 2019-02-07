@@ -5,13 +5,11 @@
     <title>DiJey HTTP Server</title>
 </head>
 <body>
-<form>
-    <h3>Desired team:</h3>
-    <input id="team-input" type="text" name="team">
-    <input type="button" value="Delete" onclick="sendDelete(event)" />
-</form>
+<h3>Desired team:</h3>
+<input id="team-input" type="text" name="team" />
+<input type="button" value="Delete" onclick="sendDelete(event)" />
 <script>
-    function sendDelete(event){
+    function sendDelete(event) {
         event.preventDefault();
         var url = "http://localhost:3001/delete-team";
         fetch(url, {
