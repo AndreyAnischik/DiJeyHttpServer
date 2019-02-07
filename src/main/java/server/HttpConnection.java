@@ -22,30 +22,34 @@ public class HttpConnection implements Runnable {
     @Override
     public void run() {
         while(true) {
-            try {
-                clientData = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-                serverData = new PrintWriter(socket.getOutputStream());
-                dataOut = new BufferedOutputStream(socket.getOutputStream());
+            handleResponse();
+        }
+    }
 
-                String input = clientData.readLine();
-                StringTokenizer parsedData = new StringTokenizer(input);
-                String method = parsedData.nextToken().toUpperCase();
+    public void handleResponse() {
+        try {
+            clientData = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            serverData = new PrintWriter(socket.getOutputStream());
+            dataOut = new BufferedOutputStream(socket.getOutputStream());
 
-                switch (method) {
-                    case Constants.GET:
-                        get(parsedData);
-                        break;
-                    case Constants.POST:
-                        break;
-                    case Constants.HEAD:
-                        break;
-                    default:
-                        sendNotImplemented();
-                        break;
-                }
-            } catch (IOException exception) {
-                exception.printStackTrace();
+            String input = clientData.readLine();
+            StringTokenizer parsedData = new StringTokenizer(input);
+            String method = parsedData.nextToken().toUpperCase();
+
+            switch (method) {
+                case Constants.GET:
+                    get(parsedData);
+                    break;
+                case Constants.POST:
+                    break;
+                case Constants.HEAD:
+                    break;
+                default:
+                    sendNotImplemented();
+                    break;
             }
+        } catch (IOException exception) {
+            exception.printStackTrace();
         }
     }
 
