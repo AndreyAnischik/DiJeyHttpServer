@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DiJey HTTP Server</title>
+</head>
+<body>
+<h3>Desired team:</h3>
+<input id="team-input" type="text" name="team" />
+<input type="button" value="Delete" onclick="sendDelete(event)" />
+<script>
+    function sendDelete(event) {
+        event.preventDefault();
+        var url = "http://localhost:3001/delete-team";
+        fetch(url, {
+            method : "DELETE",
+            body: new FormData(document.getElementById("team-input"))
+        });
+    }
+</script>
+</body>
+</html>
