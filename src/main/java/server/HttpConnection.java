@@ -1,7 +1,12 @@
 package server;
 
+import javax.script.*;
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
 import java.util.StringTokenizer;
 
@@ -41,6 +46,7 @@ public class HttpConnection implements Runnable {
                     get(parsedData);
                     break;
                 case Constants.POST:
+                    post();
                     break;
                 case Constants.HEAD:
                     break;
@@ -61,6 +67,21 @@ public class HttpConnection implements Runnable {
     private void sendNotImplemented() throws IOException {
         String notImplemented = Constants.NOT_IMPLEMENTED_PAGE;
         setDataToResponse(Constants.NOT_IMPLEMENTED, notImplemented);
+    }
+
+    private void post() {
+        try {
+            Path currentRelativePath = Paths.get(Constants.SCRIPTS_DIRECTORY + "change_team.rb");
+
+            ScriptEngine jruby = new ScriptEngineManager().getEngineByName("jruby");
+            jruby.eval(Files.newBufferedReader(currentRelativePath, StandardCharsets.UTF_8));
+
+            Invocable invokableJrubyIns = (Invocable) jruby;
+            String scriptResult = (String) invokableJrubyIns.invokeFunction("change", "real");
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private void setDataToResponse(String code, String file) throws IOException {
