@@ -69,7 +69,16 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Constants.NOT_IMPLEMENTED, notImplemented);
     }
 
-    private void post() {
+    private void post() throws IOException {
+        LineNumberReader lineNumberReader = new LineNumberReader(clientData);
+        StringBuffer bodySb = new StringBuffer();
+        char[] bodyChars = new char[1024];
+        int length;
+
+        while (lineNumberReader.ready() && (length = lineNumberReader.read(bodyChars)) > 0) {
+            bodySb.append(bodyChars, 0, length);
+        }
+
         try {
             Path currentRelativePath = Paths.get(Constants.SCRIPTS_DIRECTORY + "change_team.rb");
 
@@ -82,6 +91,8 @@ public class HttpConnection implements Runnable {
         catch (Exception e) {
             e.printStackTrace();
         }
+
+        setDataToResponse(Constants.OK, "/index.html");
     }
 
     private void setDataToResponse(String code, String file) throws IOException {
