@@ -7,7 +7,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 
 public class HttpConnection implements Runnable {
@@ -79,6 +81,14 @@ public class HttpConnection implements Runnable {
             bodySb.append(bodyChars, 0, length);
         }
 
+        String paramsArray = bodySb.toString().split("\r\n\r\n")[1];
+
+        HashMap<String, String> paramsHash = new HashMap<>();
+        for (String singleParamSet : paramsArray.split("&")) {
+            String[] params = singleParamSet.split("=");
+            paramsHash.put(params[0], params[1]);
+        }
+
         try {
             Path currentRelativePath = Paths.get(Constants.SCRIPTS_DIRECTORY + "change_team.rb");
 
@@ -86,33 +96,42 @@ public class HttpConnection implements Runnable {
             jruby.eval(Files.newBufferedReader(currentRelativePath, StandardCharsets.UTF_8));
 
             Invocable invokableJrubyIns = (Invocable) jruby;
-            String scriptResult = (String) invokableJrubyIns.invokeFunction("change", "real");
+            String scriptResult = (String) invokableJrubyIns.invokeFunction("change", paramsHash.get("team"));
+            setDataToResponse(Constants.OK, scriptResult);
         }
         catch (Exception e) {
             e.printStackTrace();
         }
-
-        setDataToResponse(Constants.OK, "/index.html");
     }
 
-    private void setDataToResponse(String code, String file) throws IOException {
-        File sendingFile = new File(Constants.CONTENT_DIRECTORY, file);
-        int fileLength = (int) sendingFile.length();
-        String content = getContentType(file);
+    private void setDataToResponse(String code, String content) throws IOException {
+        byte[] byteData;
+        int contentLength;
 
-        byte[] fileData = readFileData(sendingFile, fileLength);
-        composeResponse(code, content, fileLength);
+        String contentType = getContentType(content);
 
-        dataOut.write(fileData, 0, fileLength);
+        if(contentType.equals("text/plain")){
+            byteData = content.getBytes();
+            contentLength = content.length();
+        } else {
+            File sendingFile = new File(Constants.CONTENT_DIRECTORY, content);
+            contentLength = (int) sendingFile.length();
+
+            byteData = readFileData(sendingFile, contentLength);
+        }
+
+        composeResponse(code, contentType, contentLength);
+
+        dataOut.write(byteData, 0, contentLength);
         dataOut.flush();
     }
 
-    private void composeResponse(String code, String content, int fileLength) {
+    private void composeResponse(String code, String contentType, int contentLength) {
         serverData.println("HTTP/1.1 " + code);
         serverData.println("Server: Java http server by DiJey");
         serverData.println("Date: " + new Date());
-        serverData.println("Content-type: " + content);
-        serverData.println("Content-length: " + fileLength);
+        serverData.println("Content-type: " + contentType);
+        serverData.println("Content-length: " + contentLength);
         serverData.println();
         serverData.flush();
     }
