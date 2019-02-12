@@ -1,8 +1,14 @@
 package server;
 
+import javax.script.*;
 import java.io.*;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.StringTokenizer;
 
 public class HttpConnection implements Runnable {
@@ -41,6 +47,7 @@ public class HttpConnection implements Runnable {
                     get(parsedData);
                     break;
                 case Constants.POST:
+                    post();
                     break;
                 case Constants.HEAD:
                     break;
@@ -63,24 +70,67 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Constants.NOT_IMPLEMENTED, notImplemented);
     }
 
-    private void setDataToResponse(String code, String file) throws IOException {
-        File sendingFile = new File(Constants.CONTENT_DIRECTORY, file);
-        int fileLength = (int) sendingFile.length();
-        String content = getContentType(file);
+    private void post() throws IOException {
+        LineNumberReader lineNumberReader = new LineNumberReader(clientData);
+        StringBuffer bodySb = new StringBuffer();
+        char[] bodyChars = new char[1024];
+        int length;
 
-        byte[] fileData = readFileData(sendingFile, fileLength);
-        composeResponse(code, content, fileLength);
+        while (lineNumberReader.ready() && (length = lineNumberReader.read(bodyChars)) > 0) {
+            bodySb.append(bodyChars, 0, length);
+        }
 
-        dataOut.write(fileData, 0, fileLength);
+        String paramsArray = bodySb.toString().split("\r\n\r\n")[1];
+
+        HashMap<String, String> paramsHash = new HashMap<>();
+        for (String singleParamSet : paramsArray.split("&")) {
+            String[] params = singleParamSet.split("=");
+            paramsHash.put(params[0], params[1]);
+        }
+
+        try {
+            Path currentRelativePath = Paths.get(Constants.SCRIPTS_DIRECTORY + "change_team.rb");
+
+            ScriptEngine jruby = new ScriptEngineManager().getEngineByName("jruby");
+            jruby.eval(Files.newBufferedReader(currentRelativePath, StandardCharsets.UTF_8));
+
+            Invocable invokableJrubyIns = (Invocable) jruby;
+            String scriptResult = (String) invokableJrubyIns.invokeFunction("change", paramsHash.get("team"));
+            setDataToResponse(Constants.OK, scriptResult);
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setDataToResponse(String code, String content) throws IOException {
+        byte[] byteData;
+        int contentLength;
+
+        String contentType = getContentType(content);
+
+        if(contentType.equals("text/plain")){
+            byteData = content.getBytes();
+            contentLength = content.length();
+        } else {
+            File sendingFile = new File(Constants.CONTENT_DIRECTORY, content);
+            contentLength = (int) sendingFile.length();
+
+            byteData = readFileData(sendingFile, contentLength);
+        }
+
+        composeResponse(code, contentType, contentLength);
+
+        dataOut.write(byteData, 0, contentLength);
         dataOut.flush();
     }
 
-    private void composeResponse(String code, String content, int fileLength) {
+    private void composeResponse(String code, String contentType, int contentLength) {
         serverData.println("HTTP/1.1 " + code);
         serverData.println("Server: Java http server by DiJey");
         serverData.println("Date: " + new Date());
-        serverData.println("Content-type: " + content);
-        serverData.println("Content-length: " + fileLength);
+        serverData.println("Content-type: " + contentType);
+        serverData.println("Content-length: " + contentLength);
         serverData.println();
         serverData.flush();
     }

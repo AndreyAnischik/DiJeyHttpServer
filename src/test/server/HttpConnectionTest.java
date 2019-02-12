@@ -64,6 +64,30 @@ public class HttpConnectionTest {
         assertTrue(sendingContent.contains(initialContent));
     }
 
+    @Test
+    public void postTesting() throws IOException {
+        final String REQUEST_CONTENT = "POST /some_path HTTP/1.1\n" +
+                "Accept-Encoding: gzip, deflate, br\n" +
+                "Accept-Language: en-US,en;q=0.9\r\n\r\n" +
+                "team=real";
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        Mockito.doReturn(new ByteArrayInputStream(REQUEST_CONTENT.getBytes())).when(socket).getInputStream();
+        Mockito.doReturn(baos).when(socket).getOutputStream();
+
+        HttpConnection connection = new HttpConnection(httpServer, socket);
+        connection.handleResponse();
+
+        String sendingContent = baos.toString();
+        String finalContent = "You have changed real team";
+
+        assertTrue(sendingContent.contains("HTTP/1.1 " + Constants.OK));
+        assertTrue(sendingContent.contains("Content-type: text/plain"));
+        assertTrue(sendingContent.contains("Content-length: " + finalContent.length()));
+        assertTrue(sendingContent.contains(finalContent));
+    }
+
     private String getInitialContent(String fileName){
         StringBuilder contentBuilder = new StringBuilder();
         try {

@@ -20,5 +20,6 @@ public class Constants {
     public static final String HTTP_VERSION_NOT_SUPPORTED = "505";
 
     public static final String CONTENT_DIRECTORY = "./src/main/pages";
+    public static final String SCRIPTS_DIRECTORY = "./src/main/scripts/";
     public static final String NOT_IMPLEMENTED_PAGE = "/not_implemented.html";
 }
