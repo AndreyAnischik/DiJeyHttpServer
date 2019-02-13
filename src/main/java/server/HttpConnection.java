@@ -1,5 +1,7 @@
 package server;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import javax.script.*;
 import java.io.*;
 import java.net.Socket;
@@ -47,7 +49,7 @@ public class HttpConnection implements Runnable {
                     get(parsedData);
                     break;
                 case Constants.POST:
-                    post();
+                    post(parsedData);
                     break;
                 case Constants.HEAD:
                     break;
@@ -76,7 +78,7 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Constants.NOT_IMPLEMENTED, notImplemented);
     }
 
-    private void post() throws IOException {
+    private void post(StringTokenizer parsedData) throws IOException {
         LineNumberReader lineNumberReader = new LineNumberReader(clientData);
         StringBuffer bodySb = new StringBuffer();
         char[] bodyChars = new char[1024];
@@ -95,13 +97,15 @@ public class HttpConnection implements Runnable {
         }
 
         try {
-            Path currentRelativePath = Paths.get(Constants.SCRIPTS_DIRECTORY + "change_team.rb");
+            Path currentRelativePath = Paths.get(Constants.SCRIPTS_DIRECTORY + "ruby_helper.rb");
+            String methodName = parsedData.nextToken().substring(1).replace('-', '_');
+            String jsonParams = new ObjectMapper().writeValueAsString(paramsHash);
 
             ScriptEngine jruby = new ScriptEngineManager().getEngineByName("jruby");
             jruby.eval(Files.newBufferedReader(currentRelativePath, StandardCharsets.UTF_8));
 
             Invocable invokableJrubyIns = (Invocable) jruby;
-            String scriptResult = (String) invokableJrubyIns.invokeFunction("change", paramsHash.get("team"));
+            String scriptResult = (String) invokableJrubyIns.invokeFunction(methodName, jsonParams);
             setDataToResponse(Constants.OK, scriptResult);
         }
         catch (Exception e) {
