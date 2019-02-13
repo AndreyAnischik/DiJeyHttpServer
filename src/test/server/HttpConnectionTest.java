@@ -88,6 +88,27 @@ public class HttpConnectionTest {
         assertTrue(sendingContent.contains(finalContent));
     }
 
+    @Test
+    public void getNotFound() throws IOException {
+        final String REQUEST_CONTENT = "GET /not_existed_page.html HTTP/1.1";
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        Mockito.doReturn(new ByteArrayInputStream(REQUEST_CONTENT.getBytes())).when(socket).getInputStream();
+        Mockito.doReturn(baos).when(socket).getOutputStream();
+
+        HttpConnection connection = new HttpConnection(httpServer, socket);
+        connection.handleResponse();
+
+        String initialContent = getInitialContent(Constants.NOT_FOUND_PAGE);
+        String sendingContent = baos.toString();
+
+        assertTrue(sendingContent.contains("HTTP/1.1 " + Constants.NOT_FOUND));
+        assertTrue(sendingContent.contains("Content-type: text/html"));
+        assertTrue(sendingContent.contains("Content-length: " + initialContent.length()));
+        assertTrue(sendingContent.contains(initialContent));
+    }
+
     private String getInitialContent(String fileName){
         StringBuilder contentBuilder = new StringBuilder();
         try {

@@ -55,6 +55,12 @@ public class HttpConnection implements Runnable {
                     sendNotImplemented();
                     break;
             }
+        } catch (FileNotFoundException fileException) {
+            try {
+                fileNotFound();
+            } catch (IOException ioException) {
+                ioException.printStackTrace();
+            }
         } catch (IOException exception) {
             exception.printStackTrace();
         }
@@ -103,13 +109,18 @@ public class HttpConnection implements Runnable {
         }
     }
 
+    private void fileNotFound() throws IOException {
+        String notFound = Constants.NOT_FOUND_PAGE;
+        setDataToResponse(Constants.NOT_FOUND, notFound);
+    }
+
     private void setDataToResponse(String code, String content) throws IOException {
         byte[] byteData;
         int contentLength;
 
         String contentType = getContentType(content);
 
-        if(contentType.equals("text/plain")){
+        if(contentType.equals("text/plain")) {
             byteData = content.getBytes();
             contentLength = content.length();
         } else {
