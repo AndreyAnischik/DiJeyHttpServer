@@ -66,7 +66,7 @@ public class HttpConnectionTest {
 
     @Test
     public void postTesting() throws IOException {
-        final String REQUEST_CONTENT = "POST /some_path HTTP/1.1\n" +
+        final String REQUEST_CONTENT = "POST /post-change HTTP/1.1\n" +
                 "Accept-Encoding: gzip, deflate, br\n" +
                 "Accept-Language: en-US,en;q=0.9\r\n\r\n" +
                 "team=real";
