@@ -1,5 +1,8 @@
 package server;
 
+import javafx.scene.control.TextArea;
+import log.Logger;
+
 import javax.script.*;
 import java.io.*;
 import java.net.Socket;
@@ -19,15 +22,17 @@ public class HttpConnection implements Runnable {
     private PrintWriter serverData = null;
     private BufferedOutputStream dataOut = null;
     private String fileName = null;
+    private Logger logger;
 
-    public HttpConnection(HttpServer server, Socket socket) {
+    public HttpConnection(HttpServer server, Socket socket) throws IOException {
         this.httpServer = server;
         this.socket = socket;
+        this.logger = Logger.getInstance(new TextArea());
     }
 
     @Override
     public void run() {
-        while(true) {
+        while (true) {
             handleResponse();
         }
     }
@@ -38,22 +43,25 @@ public class HttpConnection implements Runnable {
             serverData = new PrintWriter(socket.getOutputStream());
             dataOut = new BufferedOutputStream(socket.getOutputStream());
 
-            String input = clientData.readLine();
-            StringTokenizer parsedData = new StringTokenizer(input);
-            String method = parsedData.nextToken().toUpperCase();
+            if (clientData.ready()) {
+                String input = clientData.readLine();
+                StringTokenizer parsedData = new StringTokenizer(input);
+                String method = parsedData.nextToken().toUpperCase();
 
-            switch (method) {
-                case Constants.GET:
-                    get(parsedData);
-                    break;
-                case Constants.POST:
-                    post();
-                    break;
-                case Constants.HEAD:
-                    break;
-                default:
-                    sendNotImplemented();
-                    break;
+                switch (method) {
+                    case Constants.GET:
+                        get(parsedData);
+                        break;
+                    case Constants.POST:
+                        post();
+                        break;
+                    case Constants.HEAD:
+                        head(parsedData);
+                        break;
+                    default:
+                        sendNotImplemented();
+                        break;
+                }
             }
         } catch (FileNotFoundException fileException) {
             try {
@@ -103,8 +111,7 @@ public class HttpConnection implements Runnable {
             Invocable invokableJrubyIns = (Invocable) jruby;
             String scriptResult = (String) invokableJrubyIns.invokeFunction("change", paramsHash.get("team"));
             setDataToResponse(Constants.OK, scriptResult);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
@@ -114,13 +121,29 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Constants.NOT_FOUND, notFound);
     }
 
+    private void head(StringTokenizer parsedData) throws IOException {
+
+        fileName = parsedData.nextToken().toLowerCase();
+        int contentLength;
+
+        String contentType = getContentType(fileName);
+
+        if (contentType.equals("text/plain")) {
+            contentLength = fileName.length();
+        } else {
+            contentLength = (int) new File(Constants.CONTENT_DIRECTORY, fileName).length();
+        }
+
+        composeResponse(Constants.OK, contentType, contentLength);
+    }
+
     private void setDataToResponse(String code, String content) throws IOException {
         byte[] byteData;
         int contentLength;
 
         String contentType = getContentType(content);
 
-        if(contentType.equals("text/plain")) {
+        if (contentType.equals("text/plain")) {
             byteData = content.getBytes();
             contentLength = content.length();
         } else {
