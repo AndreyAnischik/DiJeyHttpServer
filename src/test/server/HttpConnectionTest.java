@@ -1,6 +1,7 @@
 package server;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import org.mockito.Mockito;
@@ -80,7 +81,7 @@ public class HttpConnectionTest {
         connection.handleResponse();
 
         String sendingContent = baos.toString();
-        String finalContent = "You have changed real team";
+        String finalContent = "You have changed real team.";
 
         assertTrue(sendingContent.contains("HTTP/1.1 " + Constants.OK));
         assertTrue(sendingContent.contains("Content-type: text/plain"));
@@ -105,6 +106,30 @@ public class HttpConnectionTest {
 
         assertTrue(sendingContent.contains("HTTP/1.1 " + Constants.NOT_FOUND));
         assertTrue(sendingContent.contains("Content-type: text/html"));
+        assertTrue(sendingContent.contains("Content-length: " + initialContent.length()));
+        assertTrue(sendingContent.contains(initialContent));
+    }
+
+    @Ignore
+    public void reproduceServerUnavailable() throws IOException {
+        final String REQUEST_CONTENT = "POST /fake-post HTTP/1.1\n" +
+                "Accept-Encoding: gzip, deflate, br\n" +
+                "Accept-Language: en-US,en;q=0.9\r\n\r\n" +
+                "param=real";
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        Mockito.doReturn(new ByteArrayInputStream(REQUEST_CONTENT.getBytes())).when(socket).getInputStream();
+        Mockito.doReturn(baos).when(socket).getOutputStream();
+
+        HttpConnection connection = new HttpConnection(httpServer, socket);
+        connection.handleResponse();
+
+        String initialContent = "Service unavailable.";
+        String sendingContent = baos.toString();
+
+        assertTrue(sendingContent.contains("HTTP/1.1 " + Constants.SERVICE_UNAVAILABLE));
+        assertTrue(sendingContent.contains("Content-type: text/plain"));
         assertTrue(sendingContent.contains("Content-length: " + initialContent.length()));
         assertTrue(sendingContent.contains(initialContent));
     }
