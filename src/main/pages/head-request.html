@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>DiJey HTTP Server</title>
+</head>
+<body>
+<h3>Desired team:</h3>
+<input type="button" value="HEAD" onclick="sendHead(event)" />
+<script>
+    function sendHead(event) {
+        event.preventDefault();
+        var url = "http://localhost:3001/head-request";
+        fetch(url, {
+            method : "HEAD"
+        });
+    }
+</script>
+</body>
+</html>

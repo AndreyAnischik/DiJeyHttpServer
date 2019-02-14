@@ -3,6 +3,8 @@ package server;
 import javafx.scene.control.TextArea;
 import log.Logger;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import javax.script.*;
 import java.io.*;
 import java.net.Socket;
@@ -13,6 +15,7 @@ import java.nio.file.Paths;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.StringTokenizer;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class HttpConnection implements Runnable {
     private HttpServer httpServer;
@@ -53,7 +56,7 @@ public class HttpConnection implements Runnable {
                         get(parsedData);
                         break;
                     case Constants.POST:
-                        post();
+                        post(parsedData);
                         break;
                     case Constants.HEAD:
                         head(parsedData);
@@ -84,33 +87,34 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Constants.NOT_IMPLEMENTED, notImplemented);
     }
 
-    private void post() throws IOException {
-        LineNumberReader lineNumberReader = new LineNumberReader(clientData);
-        StringBuffer bodySb = new StringBuffer();
-        char[] bodyChars = new char[1024];
-        int length;
-
-        while (lineNumberReader.ready() && (length = lineNumberReader.read(bodyChars)) > 0) {
-            bodySb.append(bodyChars, 0, length);
-        }
-
-        String paramsArray = bodySb.toString().split("\r\n\r\n")[1];
-
-        HashMap<String, String> paramsHash = new HashMap<>();
-        for (String singleParamSet : paramsArray.split("&")) {
-            String[] params = singleParamSet.split("=");
-            paramsHash.put(params[0], params[1]);
-        }
+    private void post(StringTokenizer parsedData) throws IOException {
+        HashMap<String, String> paramsHash = parseParams();
 
         try {
-            Path currentRelativePath = Paths.get(Constants.SCRIPTS_DIRECTORY + "change_team.rb");
+            Path currentRelativePath = Paths.get(Constants.SCRIPTS_DIRECTORY + "ruby_helper.rb");
+            String methodName = parsedData.nextToken().substring(1).replace('-', '_');
+            String jsonParams = new ObjectMapper().writeValueAsString(paramsHash);
 
             ScriptEngine jruby = new ScriptEngineManager().getEngineByName("jruby");
             jruby.eval(Files.newBufferedReader(currentRelativePath, StandardCharsets.UTF_8));
 
             Invocable invokableJrubyIns = (Invocable) jruby;
-            String scriptResult = (String) invokableJrubyIns.invokeFunction("change", paramsHash.get("team"));
-            setDataToResponse(Constants.OK, scriptResult);
+            AtomicReference<String> scriptResult = new AtomicReference<>("");
+
+            try {
+                TimeoutBlock timeoutBlock = new TimeoutBlock(5000);
+                Runnable block = () -> {
+                    try {
+                        scriptResult.set((String) invokableJrubyIns.invokeFunction(methodName, jsonParams));
+                    } catch (NoSuchMethodException | ScriptException e) {
+                        e.printStackTrace();
+                    }
+                };
+                timeoutBlock.addBlock(block);
+                setDataToResponse(Constants.OK, scriptResult.get());
+            } catch (Throwable e) {
+                setDataToResponse(Constants.SERVICE_UNAVAILABLE, "Service unavailable.");
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -198,6 +202,27 @@ public class HttpConnection implements Runnable {
         }
 
         return fileData;
+    }
+
+    private HashMap<String, String> parseParams() throws IOException {
+        LineNumberReader lineNumberReader = new LineNumberReader(clientData);
+        StringBuffer bodySb = new StringBuffer();
+        char[] bodyChars = new char[1024];
+        int length;
+
+        while (lineNumberReader.ready() && (length = lineNumberReader.read(bodyChars)) > 0) {
+            bodySb.append(bodyChars, 0, length);
+        }
+
+        String paramsArray = bodySb.toString().split("\r\n\r\n")[1];
+
+        HashMap<String, String> paramsHash = new HashMap<>();
+        for (String singleParamSet : paramsArray.split("&")) {
+            String[] params = singleParamSet.split("=");
+            paramsHash.put(params[0], params[1]);
+        }
+
+        return paramsHash;
     }
 
     private String getContentType(String file) {
