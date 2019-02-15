@@ -1,6 +1,8 @@
 package server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import javafx.scene.control.TextArea;
+import logger.Logger;
 
 import javax.script.*;
 import java.io.*;
@@ -22,15 +24,17 @@ public class HttpConnection implements Runnable {
     private PrintWriter serverData = null;
     private BufferedOutputStream dataOut = null;
     private String fileName = null;
+    private Logger logger;
 
     public HttpConnection(HttpServer server, Socket socket) {
         this.httpServer = server;
         this.socket = socket;
+        this.logger = Logger.getInstance(new TextArea());
     }
 
     @Override
     public void run() {
-        while(true) {
+        while (true) {
             handleResponse();
         }
     }
@@ -41,22 +45,25 @@ public class HttpConnection implements Runnable {
             serverData = new PrintWriter(socket.getOutputStream());
             dataOut = new BufferedOutputStream(socket.getOutputStream());
 
-            String input = clientData.readLine();
-            StringTokenizer parsedData = new StringTokenizer(input);
-            String method = parsedData.nextToken().toUpperCase();
+            if (clientData.ready()) {
+                String input = clientData.readLine();
+                StringTokenizer parsedData = new StringTokenizer(input);
+                String method = parsedData.nextToken().toUpperCase();
 
-            switch (method) {
-                case Constants.GET:
-                    get(parsedData);
-                    break;
-                case Constants.POST:
-                    post(parsedData);
-                    break;
-                case Constants.HEAD:
-                    break;
-                default:
-                    sendNotImplemented();
-                    break;
+                switch (method) {
+                    case Constants.GET:
+                        get(parsedData);
+                        break;
+                    case Constants.POST:
+                        post(parsedData);
+                        break;
+                    case Constants.HEAD:
+                        head(parsedData);
+                        break;
+                    default:
+                        sendNotImplemented();
+                        break;
+                }
             }
         } catch (FileNotFoundException fileException) {
             try {
@@ -117,13 +124,28 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Constants.NOT_FOUND, notFound);
     }
 
+    private void head(StringTokenizer parsedData) {
+        fileName = parsedData.nextToken().toLowerCase();
+        int contentLength;
+
+        String contentType = getContentType(fileName);
+
+        if (contentType.equals("text/plain")) {
+            contentLength = fileName.length();
+        } else {
+            contentLength = (int) new File(Constants.CONTENT_DIRECTORY, fileName).length();
+        }
+
+        composeResponse(Constants.OK, contentType, contentLength);
+    }
+
     private void setDataToResponse(String code, String content) throws IOException {
         byte[] byteData;
         int contentLength;
 
         String contentType = getContentType(content);
 
-        if(contentType.equals("text/plain")) {
+        if (contentType.equals("text/plain")) {
             byteData = content.getBytes();
             contentLength = content.length();
         } else {

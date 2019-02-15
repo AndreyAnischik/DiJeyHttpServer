@@ -14,7 +14,7 @@ public class TimeoutBlock {
         timeoutWorker.start();
         do {
             if (collectIntervals >= this.timeoutMS) {
-                timeoutWorker.interrupt();
+                timeoutWorker.stop();
                 throw new Exception(timeoutMS + " ms. Thread Block Terminated.");
             }
             collectIntervals += timeoutInteval;

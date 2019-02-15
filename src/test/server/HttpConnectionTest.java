@@ -1,9 +1,10 @@
 package server;
 
+import de.saxsys.javafx.test.JfxRunner;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
+import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 
 import java.io.*;
@@ -11,6 +12,7 @@ import java.net.Socket;
 
 import static org.junit.Assert.*;
 
+@RunWith(JfxRunner.class)
 public class HttpConnectionTest {
     private HttpServer httpServer;
     private Socket socket;
@@ -110,7 +112,7 @@ public class HttpConnectionTest {
         assertTrue(sendingContent.contains(initialContent));
     }
 
-    @Ignore
+    @Test
     public void reproduceServerUnavailable() throws IOException {
         final String REQUEST_CONTENT = "POST /fake-post HTTP/1.1\n" +
                 "Accept-Encoding: gzip, deflate, br\n" +
