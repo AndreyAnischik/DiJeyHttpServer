@@ -4,7 +4,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import log.Logger;
+import logger.Logger;
 import server.HttpServer;
 
 import java.io.IOException;

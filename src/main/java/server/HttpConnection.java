@@ -1,7 +1,7 @@
 package server;
 
 import javafx.scene.control.TextArea;
-import log.Logger;
+import logger.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 

@@ -110,7 +110,7 @@ public class HttpConnectionTest {
         assertTrue(sendingContent.contains(initialContent));
     }
 
-    @Ignore
+    @Test
     public void reproduceServerUnavailable() throws IOException {
         final String REQUEST_CONTENT = "POST /fake-post HTTP/1.1\n" +
                 "Accept-Encoding: gzip, deflate, br\n" +

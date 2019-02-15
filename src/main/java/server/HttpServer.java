@@ -2,7 +2,7 @@ package server;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import javafx.scene.control.TextArea;
-import log.Logger;
+import logger.Logger;
 
 import java.io.IOException;
 import java.net.ServerSocket;
