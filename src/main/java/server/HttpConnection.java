@@ -1,8 +1,5 @@
 package server;
 
-import javafx.scene.control.TextArea;
-import logger.Logger;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import javax.script.*;
@@ -25,12 +22,11 @@ public class HttpConnection implements Runnable {
     private PrintWriter serverData = null;
     private BufferedOutputStream dataOut = null;
     private String fileName = null;
-    private Logger logger;
+//    private Logger logger;
 
-    public HttpConnection(HttpServer server, Socket socket) throws IOException {
+    public HttpConnection(HttpServer server, Socket socket) {
         this.httpServer = server;
         this.socket = socket;
-        this.logger = Logger.getInstance(new TextArea());
     }
 
     @Override
@@ -125,8 +121,7 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Constants.NOT_FOUND, notFound);
     }
 
-    private void head(StringTokenizer parsedData) throws IOException {
-
+    private void head(StringTokenizer parsedData) {
         fileName = parsedData.nextToken().toLowerCase();
         int contentLength;
 

@@ -36,7 +36,7 @@ public class HttpServer implements Runnable {
         if (!Thread.currentThread().isInterrupted()) {
             Thread.currentThread().interrupt();
             serverSocket.close();
-            writeToLog("Server was stopped");
+            writeToLog("Server was stopped.");
         }
 
         for (HttpConnection httpConnection : connectionsManager.getConnections()) {
@@ -47,7 +47,7 @@ public class HttpServer implements Runnable {
     }
 
     private void runServer() {
-        writeToLog("Server is running on " + serverSocket.getLocalPort() + " port");
+        writeToLog("Server is running on " + serverSocket.getLocalPort() + " port.");
         try {
             Socket client = serverSocket.accept();
             HttpConnection session = new HttpConnection(this, client);

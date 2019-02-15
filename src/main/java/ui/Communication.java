@@ -12,8 +12,9 @@ import java.net.URL;
 import java.util.ResourceBundle;
 import java.util.regex.Pattern;
 
-public class UserUI implements Initializable {
+public class Communication implements Initializable {
     private HttpServer httpServer;
+    private Logger logger;
 
     @FXML
     private TextField serverPort;
@@ -21,7 +22,6 @@ public class UserUI implements Initializable {
     @FXML
     private TextArea logArea;
 
-    private Logger logger;
     @FXML
     private void start() {
         if (isValidPort()) {
