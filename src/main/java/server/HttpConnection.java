@@ -1,6 +1,7 @@
 package server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import constants.*;
 import javafx.scene.control.TextArea;
 import logger.Logger;
 
@@ -50,13 +51,13 @@ public class HttpConnection implements Runnable {
                 writeLog(method);
 
                 switch (method) {
-                    case Constants.GET:
+                    case Methods.GET:
                         get(parsedData);
                         break;
-                    case Constants.POST:
+                    case Methods.POST:
                         post(parsedData);
                         break;
-                    case Constants.HEAD:
+                    case Methods.HEAD:
                         head(parsedData);
                         break;
                     default:
@@ -79,12 +80,12 @@ public class HttpConnection implements Runnable {
         fileName = parsedData.nextToken().toLowerCase();
         HashMap<String, String> headers = parseHeaders(parse());
         writeMap(headers);
-        setDataToResponse(Constants.OK, fileName);
+        setDataToResponse(Codes.OK, fileName);
     }
 
     private void sendNotImplemented() throws IOException {
-        String notImplemented = Constants.NOT_IMPLEMENTED_PAGE;
-        setDataToResponse(Constants.NOT_IMPLEMENTED, notImplemented);
+        String notImplemented = Blanks.NOT_IMPLEMENTED_PAGE;
+        setDataToResponse(Codes.NOT_IMPLEMENTED, notImplemented);
     }
 
     private void post(StringTokenizer parsedData) throws IOException {
@@ -96,7 +97,7 @@ public class HttpConnection implements Runnable {
         writeMap(paramsHash);
 
         try {
-            Path currentRelativePath = Paths.get(Constants.SCRIPTS_DIRECTORY + "ruby_helper.rb");
+            Path currentRelativePath = Paths.get(Blanks.SCRIPTS_DIRECTORY + "ruby_helper.rb");
             String methodName = parsedData.nextToken().substring(1).replace('-', '_');
             String jsonParams = new ObjectMapper().writeValueAsString(paramsHash);
 
@@ -116,9 +117,9 @@ public class HttpConnection implements Runnable {
                     }
                 };
                 timeoutBlock.addBlock(block);
-                setDataToResponse(Constants.OK, scriptResult.get());
+                setDataToResponse(Codes.OK, scriptResult.get());
             } catch (Throwable e) {
-                setDataToResponse(Constants.SERVICE_UNAVAILABLE, "Service unavailable.");
+                setDataToResponse(Codes.SERVICE_UNAVAILABLE, "Service unavailable.");
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -126,8 +127,8 @@ public class HttpConnection implements Runnable {
     }
 
     private void fileNotFound() throws IOException {
-        String notFound = Constants.NOT_FOUND_PAGE;
-        setDataToResponse(Constants.NOT_FOUND, notFound);
+        String notFound = Blanks.NOT_FOUND_PAGE;
+        setDataToResponse(Codes.NOT_FOUND, notFound);
     }
 
     private void head(StringTokenizer parsedData) throws IOException {
@@ -143,10 +144,10 @@ public class HttpConnection implements Runnable {
         if (contentType.equals("text/plain")) {
             contentLength = fileName.length();
         } else {
-            contentLength = (int) new File(Constants.CONTENT_DIRECTORY, fileName).length();
+            contentLength = (int) new File(Blanks.CONTENT_DIRECTORY, fileName).length();
         }
 
-        composeResponse(Constants.OK, contentType, contentLength);
+        composeResponse(Codes.OK, contentType, contentLength);
     }
 
     private void setDataToResponse(String code, String content) throws IOException {
@@ -159,7 +160,7 @@ public class HttpConnection implements Runnable {
             byteData = content.getBytes();
             contentLength = content.length();
         } else {
-            File sendingFile = new File(Constants.CONTENT_DIRECTORY, content);
+            File sendingFile = new File(Blanks.CONTENT_DIRECTORY, content);
             contentLength = (int) sendingFile.length();
 
             byteData = readFileData(sendingFile, contentLength);

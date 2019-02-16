@@ -9,6 +9,7 @@ import org.mockito.Mockito;
 
 import java.io.*;
 import java.net.Socket;
+import constants.*;
 
 import static org.junit.Assert.*;
 
@@ -25,7 +26,8 @@ public class HttpConnectionTest {
 
     @Test
     public void getTesting() throws IOException {
-        final String REQUEST_CONTENT = "GET /index.html HTTP/1.1";
+        final String REQUEST_CONTENT = "GET /index.html HTTP/1.1\r\n" +
+                "Accept-Encoding: gzip, deflate, br\r\n";
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -40,7 +42,7 @@ public class HttpConnectionTest {
         String initialContent = getInitialContent(fileName);
         String sendingContent = baos.toString();
 
-        assertTrue(sendingContent.contains("HTTP/1.1 " + Constants.OK));
+        assertTrue(sendingContent.contains("HTTP/1.1 " + Codes.OK));
         assertTrue(sendingContent.contains("Content-type: text/html"));
         assertTrue(sendingContent.contains("Content-length: " + initialContent.length()));
         assertTrue(sendingContent.contains(initialContent));
@@ -58,10 +60,10 @@ public class HttpConnectionTest {
         HttpConnection connection = new HttpConnection(httpServer, socket);
         connection.handleResponse();
 
-        String initialContent = getInitialContent(Constants.NOT_IMPLEMENTED_PAGE);
+        String initialContent = getInitialContent(Blanks.NOT_IMPLEMENTED_PAGE);
         String sendingContent = baos.toString();
 
-        assertTrue(sendingContent.contains("HTTP/1.1 " + Constants.NOT_IMPLEMENTED));
+        assertTrue(sendingContent.contains("HTTP/1.1 " + Codes.NOT_IMPLEMENTED));
         assertTrue(sendingContent.contains("Content-type: text/html"));
         assertTrue(sendingContent.contains("Content-length: " + initialContent.length()));
         assertTrue(sendingContent.contains(initialContent));
@@ -69,8 +71,8 @@ public class HttpConnectionTest {
 
     @Test
     public void postTesting() throws IOException {
-        final String REQUEST_CONTENT = "POST /post-change HTTP/1.1\n" +
-                "Accept-Encoding: gzip, deflate, br\n" +
+        final String REQUEST_CONTENT = "POST /post-change HTTP/1.\r\n" +
+                "Accept-Encoding: gzip, deflate, br\r\n" +
                 "Accept-Language: en-US,en;q=0.9\r\n\r\n" +
                 "team=real";
 
@@ -85,7 +87,7 @@ public class HttpConnectionTest {
         String sendingContent = baos.toString();
         String finalContent = "You have changed real team.";
 
-        assertTrue(sendingContent.contains("HTTP/1.1 " + Constants.OK));
+        assertTrue(sendingContent.contains("HTTP/1.1 " + Codes.OK));
         assertTrue(sendingContent.contains("Content-type: text/plain"));
         assertTrue(sendingContent.contains("Content-length: " + finalContent.length()));
         assertTrue(sendingContent.contains(finalContent));
@@ -93,7 +95,8 @@ public class HttpConnectionTest {
 
     @Test
     public void getNotFound() throws IOException {
-        final String REQUEST_CONTENT = "GET /not_existed_page.html HTTP/1.1";
+        final String REQUEST_CONTENT = "GET /not_existed_page.html HTTP/1.1\r\n" +
+                "Accept-Encoding: gzip, deflate, br\r\n";
 
         ByteArrayOutputStream baos = new ByteArrayOutputStream();
 
@@ -103,10 +106,10 @@ public class HttpConnectionTest {
         HttpConnection connection = new HttpConnection(httpServer, socket);
         connection.handleResponse();
 
-        String initialContent = getInitialContent(Constants.NOT_FOUND_PAGE);
+        String initialContent = getInitialContent(Blanks.NOT_FOUND_PAGE);
         String sendingContent = baos.toString();
 
-        assertTrue(sendingContent.contains("HTTP/1.1 " + Constants.NOT_FOUND));
+        assertTrue(sendingContent.contains("HTTP/1.1 " + Codes.NOT_FOUND));
         assertTrue(sendingContent.contains("Content-type: text/html"));
         assertTrue(sendingContent.contains("Content-length: " + initialContent.length()));
         assertTrue(sendingContent.contains(initialContent));
@@ -114,8 +117,8 @@ public class HttpConnectionTest {
 
     @Test
     public void reproduceServerUnavailable() throws IOException {
-        final String REQUEST_CONTENT = "POST /fake-post HTTP/1.1\n" +
-                "Accept-Encoding: gzip, deflate, br\n" +
+        final String REQUEST_CONTENT = "POST /fake-post HTTP/1.1\r\n" +
+                "Accept-Encoding: gzip, deflate, br\r\n" +
                 "Accept-Language: en-US,en;q=0.9\r\n\r\n" +
                 "param=real";
 
@@ -130,7 +133,7 @@ public class HttpConnectionTest {
         String initialContent = "Service unavailable.";
         String sendingContent = baos.toString();
 
-        assertTrue(sendingContent.contains("HTTP/1.1 " + Constants.SERVICE_UNAVAILABLE));
+        assertTrue(sendingContent.contains("HTTP/1.1 " + Codes.SERVICE_UNAVAILABLE));
         assertTrue(sendingContent.contains("Content-type: text/plain"));
         assertTrue(sendingContent.contains("Content-length: " + initialContent.length()));
         assertTrue(sendingContent.contains(initialContent));
@@ -139,7 +142,7 @@ public class HttpConnectionTest {
     private String getInitialContent(String fileName){
         StringBuilder contentBuilder = new StringBuilder();
         try {
-            BufferedReader in = new BufferedReader(new FileReader(Constants.CONTENT_DIRECTORY + fileName));
+            BufferedReader in = new BufferedReader(new FileReader(Blanks.CONTENT_DIRECTORY + fileName));
             String str;
             while ((str = in.readLine()) != null) {
                 contentBuilder.append(str);
