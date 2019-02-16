@@ -11,9 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.StringTokenizer;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class HttpConnection implements Runnable {
@@ -49,6 +47,7 @@ public class HttpConnection implements Runnable {
                 String input = clientData.readLine();
                 StringTokenizer parsedData = new StringTokenizer(input);
                 String method = parsedData.nextToken().toUpperCase();
+                writeLog(method);
 
                 switch (method) {
                     case Constants.GET:
@@ -78,6 +77,8 @@ public class HttpConnection implements Runnable {
 
     private void get(StringTokenizer parsedData) throws IOException {
         fileName = parsedData.nextToken().toLowerCase();
+        HashMap<String, String> headers = parseHeaders(parse());
+        writeMap(headers);
         setDataToResponse(Constants.OK, fileName);
     }
 
@@ -87,7 +88,13 @@ public class HttpConnection implements Runnable {
     }
 
     private void post(StringTokenizer parsedData) throws IOException {
-        HashMap<String, String> paramsHash = parseParams();
+
+        StringBuffer stringBuffer = parse();
+        HashMap<String, String> headersHash = parseHeaders(stringBuffer);
+        HashMap<String, String> paramsHash = parseParams(stringBuffer);
+
+        writeMap(headersHash);
+        writeMap(paramsHash);
 
         try {
             Path currentRelativePath = Paths.get(Constants.SCRIPTS_DIRECTORY + "ruby_helper.rb");
@@ -126,6 +133,10 @@ public class HttpConnection implements Runnable {
 
     private void head(StringTokenizer parsedData) {
         fileName = parsedData.nextToken().toLowerCase();
+
+        HashMap<String, String> headers = parseHeaders(parse());
+        writeMap(headers);
+
         int contentLength;
 
         String contentType = getContentType(fileName);
@@ -157,16 +168,22 @@ public class HttpConnection implements Runnable {
 
         composeResponse(code, contentType, contentLength);
 
+        writeLog(new String(byteData));
         dataOut.write(byteData, 0, contentLength);
         dataOut.flush();
     }
 
     private void composeResponse(String code, String contentType, int contentLength) {
-        serverData.println("HTTP/1.1 " + code);
-        serverData.println("Server: Java http server by DiJey");
-        serverData.println("Date: " + new Date());
-        serverData.println("Content-type: " + contentType);
-        serverData.println("Content-length: " + contentLength);
+        List<String> headers = new ArrayList<>();
+        headers.add("HTTP/1.1 " + code);
+        headers.add("Server: Java http server by DiJey");
+        headers.add("Date: " + new Date());
+        headers.add("Content-type: " + contentType);
+        headers.add("Content-length: " + contentLength);
+        for (String header : headers) {
+            writeLog(header);
+            serverData.println(header);
+        }
         serverData.println();
         serverData.flush();
     }
@@ -202,7 +219,7 @@ public class HttpConnection implements Runnable {
         return fileData;
     }
 
-    private HashMap<String, String> parseParams() throws IOException {
+    private StringBuffer parse() throws IOException {
         LineNumberReader lineNumberReader = new LineNumberReader(clientData);
         StringBuffer bodySb = new StringBuffer();
         char[] bodyChars = new char[1024];
@@ -212,6 +229,22 @@ public class HttpConnection implements Runnable {
             bodySb.append(bodyChars, 0, length);
         }
 
+        return bodySb;
+    }
+
+    private HashMap<String, String> parseHeaders(StringBuffer bodySb) {
+        String headersArray = bodySb.toString().split("\r\n\r\n")[0];
+
+        HashMap<String, String> headersHash = new HashMap<>();
+        for (String header : headersArray.split("\r\n")) {
+            String[] headers = header.split(": ");
+            headersHash.put(headers[0], headers[1]);
+        }
+
+        return headersHash;
+    }
+
+    private HashMap<String, String> parseParams(StringBuffer bodySb) throws IOException {
         String paramsArray = bodySb.toString().split("\r\n\r\n")[1];
 
         HashMap<String, String> paramsHash = new HashMap<>();
@@ -233,5 +266,15 @@ public class HttpConnection implements Runnable {
 
     public String getFileName() {
         return this.fileName;
+    }
+
+    private void writeLog(String message) {
+        logger.writeToLog(message);
+    }
+
+    private void writeMap(Map<String, String> headers) {
+        for (Map.Entry<String, String> pair : headers.entrySet()) {
+            writeLog(pair.getKey() + ": " + pair.getValue());
+        }
     }
 }
