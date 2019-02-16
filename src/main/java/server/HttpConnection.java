@@ -88,7 +88,6 @@ public class HttpConnection implements Runnable {
     }
 
     private void post(StringTokenizer parsedData) throws IOException {
-
         StringBuffer stringBuffer = parse();
         HashMap<String, String> headersHash = parseHeaders(stringBuffer);
         HashMap<String, String> paramsHash = parseParams(stringBuffer);
@@ -131,7 +130,7 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Constants.NOT_FOUND, notFound);
     }
 
-    private void head(StringTokenizer parsedData) {
+    private void head(StringTokenizer parsedData) throws IOException {
         fileName = parsedData.nextToken().toLowerCase();
 
         HashMap<String, String> headers = parseHeaders(parse());
@@ -244,7 +243,7 @@ public class HttpConnection implements Runnable {
         return headersHash;
     }
 
-    private HashMap<String, String> parseParams(StringBuffer bodySb) throws IOException {
+    private HashMap<String, String> parseParams(StringBuffer bodySb) {
         String paramsArray = bodySb.toString().split("\r\n\r\n")[1];
 
         HashMap<String, String> paramsHash = new HashMap<>();
