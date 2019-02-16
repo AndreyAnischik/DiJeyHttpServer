@@ -71,7 +71,7 @@ public class HttpConnectionTest {
 
     @Test
     public void postTesting() throws IOException {
-        final String REQUEST_CONTENT = "POST /post-change HTTP/1.\r\n" +
+        final String REQUEST_CONTENT = "POST /ruby_helper.rb/post-change HTTP/1.1\r\n" +
                 "Accept-Encoding: gzip, deflate, br\r\n" +
                 "Accept-Language: en-US,en;q=0.9\r\n\r\n" +
                 "team=real";
@@ -117,7 +117,7 @@ public class HttpConnectionTest {
 
     @Test
     public void reproduceServerUnavailable() throws IOException {
-        final String REQUEST_CONTENT = "POST /fake-post HTTP/1.1\r\n" +
+        final String REQUEST_CONTENT = "POST /ruby_helper.rb/fake-post HTTP/1.1\r\n" +
                 "Accept-Encoding: gzip, deflate, br\r\n" +
                 "Accept-Language: en-US,en;q=0.9\r\n\r\n" +
                 "param=real";
@@ -134,6 +134,30 @@ public class HttpConnectionTest {
         String sendingContent = baos.toString();
 
         assertTrue(sendingContent.contains("HTTP/1.1 " + Codes.SERVICE_UNAVAILABLE));
+        assertTrue(sendingContent.contains("Content-type: text/plain"));
+        assertTrue(sendingContent.contains("Content-length: " + initialContent.length()));
+        assertTrue(sendingContent.contains(initialContent));
+    }
+
+    @Test
+    public void reproduceServerError() throws IOException {
+        final String REQUEST_CONTENT = "POST /not_existed_helper.rb/fake-post HTTP/1.1\r\n" +
+                "Accept-Encoding: gzip, deflate, br\r\n" +
+                "Accept-Language: en-US,en;q=0.9\r\n\r\n" +
+                "param=real";
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        Mockito.doReturn(new ByteArrayInputStream(REQUEST_CONTENT.getBytes())).when(socket).getInputStream();
+        Mockito.doReturn(baos).when(socket).getOutputStream();
+
+        HttpConnection connection = new HttpConnection(httpServer, socket);
+        connection.handleResponse();
+
+        String initialContent = "Server cannot respond to this request. Try again later.";
+        String sendingContent = baos.toString();
+
+        assertTrue(sendingContent.contains("HTTP/1.1 " + Codes.SERVER_ERROR));
         assertTrue(sendingContent.contains("Content-type: text/plain"));
         assertTrue(sendingContent.contains("Content-length: " + initialContent.length()));
         assertTrue(sendingContent.contains(initialContent));
