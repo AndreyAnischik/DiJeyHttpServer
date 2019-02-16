@@ -96,9 +96,11 @@ public class HttpConnection implements Runnable {
         writeMap(headersHash);
         writeMap(paramsHash);
 
+        String[] requestDestination = parsedData.nextToken().substring(1).split("/");
+
         try {
-            Path currentRelativePath = Paths.get(Blanks.SCRIPTS_DIRECTORY + "ruby_helper.rb");
-            String methodName = parsedData.nextToken().substring(1).replace('-', '_');
+            Path currentRelativePath = Paths.get(Blanks.SCRIPTS_DIRECTORY + requestDestination[0]);
+            String methodName = requestDestination[1].replace('-', '_');
             String jsonParams = new ObjectMapper().writeValueAsString(paramsHash);
 
             ScriptEngine jruby = new ScriptEngineManager().getEngineByName("jruby");
@@ -122,7 +124,7 @@ public class HttpConnection implements Runnable {
                 setDataToResponse(Codes.SERVICE_UNAVAILABLE, "Service unavailable.");
             }
         } catch (Exception e) {
-            e.printStackTrace();
+            setDataToResponse(Codes.SERVER_ERROR, "Server cannot respond to this request. Try again later.");
         }
     }
 
