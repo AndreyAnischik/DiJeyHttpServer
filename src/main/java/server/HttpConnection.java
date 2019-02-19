@@ -1,11 +1,15 @@
 package server;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import constants.*;
-import javafx.scene.control.TextArea;
-import logger.Logger;
+import constants.Blanks;
+import constants.Codes;
+import constants.Methods;
+import org.apache.log4j.Logger;
 
-import javax.script.*;
+import javax.script.Invocable;
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineManager;
+import javax.script.ScriptException;
 import java.io.*;
 import java.net.Socket;
 import java.nio.charset.StandardCharsets;
@@ -23,12 +27,11 @@ public class HttpConnection implements Runnable {
     private PrintWriter serverData = null;
     private BufferedOutputStream dataOut = null;
     private String fileName = null;
-    private Logger logger;
+    private Logger logger = Logger.getLogger(HttpConnection.class);
 
     public HttpConnection(HttpServer server, Socket socket) {
         this.httpServer = server;
         this.socket = socket;
-        this.logger = Logger.getInstance(new TextArea());
     }
 
     @Override
@@ -40,39 +43,41 @@ public class HttpConnection implements Runnable {
 
     public void handleResponse() {
         try {
-            clientData = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            serverData = new PrintWriter(socket.getOutputStream());
-            dataOut = new BufferedOutputStream(socket.getOutputStream());
+            if (!socket.isClosed()) {
+                clientData = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                serverData = new PrintWriter(socket.getOutputStream());
+                dataOut = new BufferedOutputStream(socket.getOutputStream());
 
-            if (clientData.ready()) {
-                String input = clientData.readLine();
-                StringTokenizer parsedData = new StringTokenizer(input);
-                String method = parsedData.nextToken().toUpperCase();
-                writeLog(method);
+                if (clientData.ready()) {
+                    String input = clientData.readLine();
+                    StringTokenizer parsedData = new StringTokenizer(input);
+                    String method = parsedData.nextToken().toUpperCase();
+                    logger.info(method);
 
-                switch (method) {
-                    case Methods.GET:
-                        get(parsedData);
-                        break;
-                    case Methods.POST:
-                        post(parsedData);
-                        break;
-                    case Methods.HEAD:
-                        head(parsedData);
-                        break;
-                    default:
-                        sendNotImplemented();
-                        break;
+                    switch (method) {
+                        case Methods.GET:
+                            get(parsedData);
+                            break;
+                        case Methods.POST:
+                            post(parsedData);
+                            break;
+                        case Methods.HEAD:
+                            head(parsedData);
+                            break;
+                        default:
+                            sendNotImplemented();
+                            break;
+                    }
                 }
             }
         } catch (FileNotFoundException fileException) {
             try {
                 fileNotFound();
             } catch (IOException ioException) {
-                ioException.printStackTrace();
+                logger.error("I/O error occurs while sending fileNotFound");
             }
         } catch (IOException exception) {
-            exception.printStackTrace();
+            logger.error("I/O error occurs while waiting for request");
         }
     }
 
@@ -170,7 +175,7 @@ public class HttpConnection implements Runnable {
 
         composeResponse(code, contentType, contentLength);
 
-        writeLog(new String(byteData));
+        logger.info(new String(byteData));
         dataOut.write(byteData, 0, contentLength);
         dataOut.flush();
     }
@@ -183,7 +188,7 @@ public class HttpConnection implements Runnable {
         headers.add("Content-type: " + contentType);
         headers.add("Content-length: " + contentLength);
         for (String header : headers) {
-            writeLog(header);
+            logger.info(header);
             serverData.println(header);
         }
         serverData.println();
@@ -201,20 +206,26 @@ public class HttpConnection implements Runnable {
             dataOut.close();
             socket.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error closing connection");
         }
     }
 
-    private byte[] readFileData(File file, int fileLength) throws IOException {
+    private byte[] readFileData(File file, int fileLength) {
         FileInputStream fileIn = null;
         byte[] fileData = new byte[fileLength];
 
         try {
             fileIn = new FileInputStream(file);
             fileIn.read(fileData);
+        } catch (IOException e) {
+            logger.info("Error reading file");
         } finally {
             if (fileIn != null) {
-                fileIn.close();
+                try {
+                    fileIn.close();
+                } catch (IOException e) {
+                    logger.error("Error closing file");
+                }
             }
         }
 
@@ -270,13 +281,9 @@ public class HttpConnection implements Runnable {
         return this.fileName;
     }
 
-    private void writeLog(String message) {
-        logger.writeToLog(message);
-    }
-
     private void writeMap(Map<String, String> headers) {
         for (Map.Entry<String, String> pair : headers.entrySet()) {
-            writeLog(pair.getKey() + ": " + pair.getValue());
+            logger.info(pair.getKey() + ": " + pair.getValue());
         }
     }
 }
