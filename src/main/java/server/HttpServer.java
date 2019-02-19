@@ -10,7 +10,6 @@ import java.net.Socket;
 public class HttpServer implements Runnable {
     private Dotenv dotenv = Dotenv.configure().directory("./").load();
 
-    private boolean running;
     private ServerSocket serverSocket;
     private ConnectionManager connectionsManager;
     private Logger logger = Logger.getLogger(HttpServer.class);
@@ -18,7 +17,6 @@ public class HttpServer implements Runnable {
     public HttpServer(int port) throws IOException {
         this.serverSocket = new ServerSocket(port, Integer.valueOf(dotenv.get("BACKLOG")));
         this.connectionsManager = new ConnectionManager();
-        this.running = true;
     }
 
     @Override
@@ -26,25 +24,21 @@ public class HttpServer implements Runnable {
         runServer();
     }
 
-    public boolean isRunning() {
-        return running;
-    }
-
     public void stop() throws IOException {
         for (HttpConnection httpConnection : connectionsManager.getConnections()) {
             httpConnection.stop();
         }
+
         if (!Thread.currentThread().isInterrupted()) {
             Thread.currentThread().interrupt();
             serverSocket.close();
             logger.info("Server was stopped.");
         }
-
-        running = false;
     }
 
     private void runServer() {
         logger.info("Server is running on " + serverSocket.getLocalPort() + " port.");
+
         try {
             Socket client = serverSocket.accept();
             HttpConnection session = new HttpConnection(this, client);

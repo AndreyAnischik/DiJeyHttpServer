@@ -4,7 +4,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
-import logger.TextAreaAppender;
+import appenders.TextAreaAppender;
 import org.apache.log4j.Logger;
 import server.HttpServer;
 
