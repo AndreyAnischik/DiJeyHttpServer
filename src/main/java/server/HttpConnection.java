@@ -19,6 +19,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static constants.Blanks.PROTECTED_ROUTES;
+
 public class HttpConnection implements Runnable {
     private HttpServer httpServer;
     private Socket socket;
@@ -54,15 +56,26 @@ public class HttpConnection implements Runnable {
                     String method = parsedData.nextToken().toUpperCase();
                     logger.info(method);
 
+                    StringBuffer requestBody = parse();
+                    HashMap<String, String> headers = parseHeaders(requestBody);
+                    writeMap(headers);
+
+                    String requestedRoute = parsedData.nextToken();
+                    if (headers.get("Authorization") == null &&
+                            !Arrays.stream(PROTECTED_ROUTES).anyMatch(requestedRoute::equals)
+                    ) {
+                        setDataToResponse(Codes.UNAUTHORIZED, "You are now allowed. Log in, please.");
+                    }
+
                     switch (method) {
                         case Methods.GET:
-                            get(parsedData);
+                            get(requestedRoute);
                             break;
                         case Methods.POST:
-                            post(parsedData);
+                            post(requestedRoute, requestBody);
                             break;
                         case Methods.HEAD:
-                            head(parsedData);
+                            head(requestedRoute);
                             break;
                         default:
                             sendNotImplemented();
@@ -81,11 +94,8 @@ public class HttpConnection implements Runnable {
         }
     }
 
-    private void get(StringTokenizer parsedData) throws IOException {
-        fileName = parsedData.nextToken().toLowerCase();
-        HashMap<String, String> headers = parseHeaders(parse());
-        writeMap(headers);
-        setDataToResponse(Codes.OK, fileName);
+    private void get(String requestedRoute) throws IOException {
+        setDataToResponse(Codes.OK, requestedRoute.toLowerCase());
     }
 
     private void sendNotImplemented() throws IOException {
@@ -93,15 +103,11 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Codes.NOT_IMPLEMENTED, notImplemented);
     }
 
-    private void post(StringTokenizer parsedData) throws IOException {
-        StringBuffer stringBuffer = parse();
-        HashMap<String, String> headersHash = parseHeaders(stringBuffer);
+    private void post(String requestedRoute, StringBuffer stringBuffer) throws IOException {
         HashMap<String, String> paramsHash = parseParams(stringBuffer);
-
-        writeMap(headersHash);
         writeMap(paramsHash);
 
-        String[] requestDestination = parsedData.nextToken().substring(1).split("/");
+        String[] requestDestination = requestedRoute.substring(1).split("/");
 
         try {
             Path currentRelativePath = Paths.get(Blanks.SCRIPTS_DIRECTORY + requestDestination[0]);
@@ -138,16 +144,11 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Codes.NOT_FOUND, notFound);
     }
 
-    private void head(StringTokenizer parsedData) throws IOException {
-        fileName = parsedData.nextToken().toLowerCase();
-
-        HashMap<String, String> headers = parseHeaders(parse());
-        writeMap(headers);
-
-        int contentLength;
-
+    private void head(String requestedRoute) throws IOException {
+        fileName = requestedRoute.toLowerCase();
         String contentType = getContentType(fileName);
 
+        int contentLength;
         if (contentType.equals("text/plain")) {
             contentLength = fileName.length();
         } else {
