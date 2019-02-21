@@ -163,6 +163,27 @@ public class HttpConnectionTest {
         assertTrue(sendingContent.contains(initialContent));
     }
 
+    @Test
+    public void reproduceWrongVersion() throws IOException {
+        final String REQUEST_CONTENT = "POST /not_existed_helper.rb/fake-post HTTP/1.0\r\n";
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        Mockito.doReturn(new ByteArrayInputStream(REQUEST_CONTENT.getBytes())).when(socket).getInputStream();
+        Mockito.doReturn(baos).when(socket).getOutputStream();
+
+        HttpConnection connection = new HttpConnection(httpServer, socket);
+        connection.handleResponse();
+
+        String initialContent = getInitialContent(Blanks.HTTP_VERSION_NOT_SUPPORTED);
+        String sendingContent = baos.toString();
+
+        assertTrue(sendingContent.contains("HTTP/1.1 " + Codes.HTTP_VERSION_NOT_SUPPORTED));
+        assertTrue(sendingContent.contains("Content-type: text/html"));
+        assertTrue(sendingContent.contains("Content-length: " + initialContent.length()));
+        assertTrue(sendingContent.contains(initialContent));
+    }
+
     private String getInitialContent(String fileName){
         StringBuilder contentBuilder = new StringBuilder();
         try {

@@ -89,7 +89,7 @@ public class HttpConnection implements Runnable {
     }
 
     private boolean checkHttpVersion(String httpVersion) {
-        return (httpVersion.equals(Blanks.HTTP_VERSION)) ? true : false;
+        return httpVersion.equals(Blanks.HTTP_VERSION);
     }
 
     private void get(String fileName) throws IOException {
