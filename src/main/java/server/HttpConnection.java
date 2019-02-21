@@ -68,6 +68,11 @@ public class HttpConnection implements Runnable {
                     HashMap<String, String> headers = parseHeaders(requestBody);
                     writeMap(headers);
 
+                    if (checkForbiddenFile(requestedRoute)) {
+                        sendForbidden();
+                        return;
+                    }
+
                     if (headers.get("Authorization") == null &&
                             !Arrays.stream(PROTECTED_ROUTES).anyMatch(requestedRoute::equals)
                     ) {
@@ -102,6 +107,11 @@ public class HttpConnection implements Runnable {
         }
     }
 
+    private void sendForbidden() throws IOException {
+        String forbidden = Blanks.FORBIDDEN_FILE;
+        setDataToResponse(Codes.FORBIDDEN, forbidden);
+    }
+
     private void get(String requestedRoute) throws IOException {
         setDataToResponse(Codes.OK, requestedRoute.toLowerCase());
     }
@@ -109,6 +119,10 @@ public class HttpConnection implements Runnable {
     private void sendNotImplemented() throws IOException {
         String notImplemented = Blanks.NOT_IMPLEMENTED_PAGE;
         setDataToResponse(Codes.NOT_IMPLEMENTED, notImplemented);
+    }
+
+    private boolean checkForbiddenFile(String requestedRoute) {
+        return requestedRoute.equals(Blanks.FORBIDDEN_FILE);
     }
 
     private void sendNotSupportedHttpVersion() throws IOException {
@@ -184,7 +198,9 @@ public class HttpConnection implements Runnable {
             File sendingFile = new File(Blanks.CONTENT_DIRECTORY, content);
             contentLength = (int) sendingFile.length();
 
-            if(!sendingFile.exists()) { throw new FileNotFoundException(); }
+            if (!sendingFile.exists()) {
+                throw new FileNotFoundException();
+            }
 
             byteData = readFileData(sendingFile, contentLength);
         }

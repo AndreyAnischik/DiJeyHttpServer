@@ -6,6 +6,9 @@ public class Blanks {
     public static final String NOT_IMPLEMENTED_PAGE = "/not_implemented.html";
     public static final String NOT_FOUND_PAGE = "/not_found.html";
     public static final String HTTP_VERSION_NOT_SUPPORTED = "/http_version_not_supported.html";
+
+    public static final String FORBIDDEN_FILE = "/forbidden_file.html";
+
     public static final String[] PROTECTED_ROUTES = {
         "/favicon.ico",
         "/not_found.html",
