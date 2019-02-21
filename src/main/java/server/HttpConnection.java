@@ -52,17 +52,24 @@ public class HttpConnection implements Runnable {
                     String input = clientData.readLine();
                     StringTokenizer parsedData = new StringTokenizer(input);
                     String method = parsedData.nextToken().toUpperCase();
-                    logger.info(method);
+                    String fileName = parsedData.nextToken();
+
+                    if (!checkHttpVersion(parsedData.nextToken().toUpperCase())) {
+                        sendNotSupportedHttpVersion();
+                        return;
+                    }
+
+                    logger.info(input);
 
                     switch (method) {
                         case Methods.GET:
-                            get(parsedData);
+                            get(fileName);
                             break;
                         case Methods.POST:
-                            post(parsedData);
+                            post(fileName);
                             break;
                         case Methods.HEAD:
-                            head(parsedData);
+                            head(fileName);
                             break;
                         default:
                             sendNotImplemented();
@@ -81,8 +88,11 @@ public class HttpConnection implements Runnable {
         }
     }
 
-    private void get(StringTokenizer parsedData) throws IOException {
-        fileName = parsedData.nextToken().toLowerCase();
+    private boolean checkHttpVersion(String httpVersion) {
+        return (httpVersion.equals(Blanks.HTTP_VERSION)) ? true : false;
+    }
+
+    private void get(String fileName) throws IOException {
         HashMap<String, String> headers = parseHeaders(parse());
         writeMap(headers);
         setDataToResponse(Codes.OK, fileName);
@@ -93,7 +103,12 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Codes.NOT_IMPLEMENTED, notImplemented);
     }
 
-    private void post(StringTokenizer parsedData) throws IOException {
+    private void sendNotSupportedHttpVersion() throws IOException {
+        String notSupportedHttpVersion = Blanks.HTTP_VERSION_NOT_SUPPORTED;
+        setDataToResponse(Codes.HTTP_VERSION_NOT_SUPPORTED, notSupportedHttpVersion);
+    }
+
+    private void post(String fileName) throws IOException {
         StringBuffer stringBuffer = parse();
         HashMap<String, String> headersHash = parseHeaders(stringBuffer);
         HashMap<String, String> paramsHash = parseParams(stringBuffer);
@@ -101,7 +116,7 @@ public class HttpConnection implements Runnable {
         writeMap(headersHash);
         writeMap(paramsHash);
 
-        String[] requestDestination = parsedData.nextToken().substring(1).split("/");
+        String[] requestDestination = fileName.substring(1).split("/");
 
         try {
             Path currentRelativePath = Paths.get(Blanks.SCRIPTS_DIRECTORY + requestDestination[0]);
@@ -138,9 +153,7 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Codes.NOT_FOUND, notFound);
     }
 
-    private void head(StringTokenizer parsedData) throws IOException {
-        fileName = parsedData.nextToken().toLowerCase();
-
+    private void head(String fileName) throws IOException {
         HashMap<String, String> headers = parseHeaders(parse());
         writeMap(headers);
 
@@ -196,10 +209,6 @@ public class HttpConnection implements Runnable {
     }
 
     public void stop() {
-        if (!Thread.currentThread().isInterrupted()) {
-            Thread.currentThread().interrupt();
-        }
-
         try {
             clientData.close();
             serverData.close();
@@ -207,6 +216,10 @@ public class HttpConnection implements Runnable {
             socket.close();
         } catch (IOException e) {
             logger.error("Error closing connection");
+        }
+
+        if (!Thread.currentThread().isInterrupted()) {
+            Thread.currentThread().interrupt();
         }
     }
 
