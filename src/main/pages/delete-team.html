@@ -3,18 +3,38 @@
 <head>
     <meta charset="UTF-8">
     <title>DiJey HTTP Server</title>
+    <script src="https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js"></script>
 </head>
 <body>
 <h3>Desired team:</h3>
 <input id="team-input" type="text" name="team" />
 <input type="button" value="Delete" onclick="sendDelete(event)" />
 <script>
+    function encrypt(data) {
+        var key = forge.random.getBytesSync(16);
+        var iv = forge.random.getBytesSync(16);
+
+        var cipher = forge.rc2.createEncryptionCipher(key);
+        cipher.start(iv);
+        cipher.update(forge.util.createBuffer(data));
+        cipher.finish();
+        var encrypted = cipher.output;
+        return encrypted.toHex();
+    }
+
     function sendDelete(event) {
         event.preventDefault();
-        var url = "http://localhost:3001/delete-team";
-        fetch(url, {
+        var URL = "http://localhost:3001/delete-team";
+
+        var data = "DiJey duet is the best!";
+        var encryptedInfo = encrypt(data);
+
+        fetch(URL, {
             method : "DELETE",
-            body: new FormData(document.getElementById("team-input"))
+            body: new FormData(document.getElementById("team-input")),
+            headers: {
+                "Authorization": "Bearer " + encryptedInfo,
+            },
         });
     }
 </script>
