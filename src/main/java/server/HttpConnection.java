@@ -72,6 +72,7 @@ public class HttpConnection implements Runnable {
                             !Arrays.stream(PROTECTED_ROUTES).anyMatch(requestedRoute::equals)
                     ) {
                         setDataToResponse(Codes.UNAUTHORIZED, "You are now allowed. Log in, please.");
+                        return;
                     }
 
                     switch (method) {
@@ -162,9 +163,9 @@ public class HttpConnection implements Runnable {
 
         int contentLength;
         if (contentType.equals("text/plain")) {
-            contentLength = fileName.length();
+            contentLength = requestedRoute.length();
         } else {
-            contentLength = (int) new File(Blanks.CONTENT_DIRECTORY, fileName).length();
+            contentLength = (int) new File(Blanks.CONTENT_DIRECTORY, requestedRoute).length();
         }
 
         composeResponse(Codes.OK, contentType, contentLength);
@@ -182,6 +183,8 @@ public class HttpConnection implements Runnable {
         } else {
             File sendingFile = new File(Blanks.CONTENT_DIRECTORY, content);
             contentLength = (int) sendingFile.length();
+
+            if(!sendingFile.exists()) { throw new FileNotFoundException(); }
 
             byteData = readFileData(sendingFile, contentLength);
         }
@@ -290,10 +293,6 @@ public class HttpConnection implements Runnable {
         }
     }
 
-    public String getFileName() {
-        return this.requestedRoute;
-    }
-
     private boolean checkHttpVersion(String httpVersion) {
         return httpVersion.equals(Blanks.HTTP_VERSION);
     }
@@ -302,5 +301,9 @@ public class HttpConnection implements Runnable {
         for (Map.Entry<String, String> pair : headers.entrySet()) {
             logger.info(pair.getKey() + ": " + pair.getValue());
         }
+    }
+
+    public String getFileName() {
+        return this.requestedRoute;
     }
 }
