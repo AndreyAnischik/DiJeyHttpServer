@@ -19,6 +19,8 @@ import java.nio.file.Paths;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static constants.Blanks.PROTECTED_ROUTES;
+
 public class HttpConnection implements Runnable {
     private HttpServer httpServer;
     private Socket socket;
@@ -26,7 +28,7 @@ public class HttpConnection implements Runnable {
     private BufferedReader clientData = null;
     private PrintWriter serverData = null;
     private BufferedOutputStream dataOut = null;
-    private String fileName = null;
+    private String requestedRoute = null;
     private Logger logger = Logger.getLogger(HttpConnection.class);
 
     public HttpConnection(HttpServer server, Socket socket) {
@@ -52,7 +54,8 @@ public class HttpConnection implements Runnable {
                     String input = clientData.readLine();
                     StringTokenizer parsedData = new StringTokenizer(input);
                     String method = parsedData.nextToken().toUpperCase();
-                    String fileName = parsedData.nextToken();
+
+                    requestedRoute = parsedData.nextToken();
 
                     if (!checkHttpVersion(parsedData.nextToken().toUpperCase())) {
                         sendNotSupportedHttpVersion();
@@ -61,15 +64,26 @@ public class HttpConnection implements Runnable {
 
                     logger.info(input);
 
+                    StringBuffer requestBody = parse();
+                    HashMap<String, String> headers = parseHeaders(requestBody);
+                    writeMap(headers);
+
+                    if (headers.get("Authorization") == null &&
+                            !Arrays.stream(PROTECTED_ROUTES).anyMatch(requestedRoute::equals)
+                    ) {
+                        setDataToResponse(Codes.UNAUTHORIZED, "You are now allowed. Log in, please.");
+                        return;
+                    }
+
                     switch (method) {
                         case Methods.GET:
-                            get(fileName);
+                            get(requestedRoute);
                             break;
                         case Methods.POST:
-                            post(fileName);
+                            post(requestedRoute, requestBody);
                             break;
                         case Methods.HEAD:
-                            head(fileName);
+                            head(requestedRoute);
                             break;
                         default:
                             sendNotImplemented();
@@ -88,14 +102,8 @@ public class HttpConnection implements Runnable {
         }
     }
 
-    private boolean checkHttpVersion(String httpVersion) {
-        return httpVersion.equals(Blanks.HTTP_VERSION);
-    }
-
-    private void get(String fileName) throws IOException {
-        HashMap<String, String> headers = parseHeaders(parse());
-        writeMap(headers);
-        setDataToResponse(Codes.OK, fileName);
+    private void get(String requestedRoute) throws IOException {
+        setDataToResponse(Codes.OK, requestedRoute.toLowerCase());
     }
 
     private void sendNotImplemented() throws IOException {
@@ -108,15 +116,11 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Codes.HTTP_VERSION_NOT_SUPPORTED, notSupportedHttpVersion);
     }
 
-    private void post(String fileName) throws IOException {
-        StringBuffer stringBuffer = parse();
-        HashMap<String, String> headersHash = parseHeaders(stringBuffer);
+    private void post(String requestedRoute, StringBuffer stringBuffer) throws IOException {
         HashMap<String, String> paramsHash = parseParams(stringBuffer);
-
-        writeMap(headersHash);
         writeMap(paramsHash);
 
-        String[] requestDestination = fileName.substring(1).split("/");
+        String[] requestDestination = requestedRoute.substring(1).split("/");
 
         try {
             Path currentRelativePath = Paths.get(Blanks.SCRIPTS_DIRECTORY + requestDestination[0]);
@@ -153,18 +157,15 @@ public class HttpConnection implements Runnable {
         setDataToResponse(Codes.NOT_FOUND, notFound);
     }
 
-    private void head(String fileName) throws IOException {
-        HashMap<String, String> headers = parseHeaders(parse());
-        writeMap(headers);
-
-        int contentLength;
-
+    private void head(String requestedRoute) throws IOException {
+        String fileName = requestedRoute.toLowerCase();
         String contentType = getContentType(fileName);
 
+        int contentLength;
         if (contentType.equals("text/plain")) {
-            contentLength = fileName.length();
+            contentLength = requestedRoute.length();
         } else {
-            contentLength = (int) new File(Blanks.CONTENT_DIRECTORY, fileName).length();
+            contentLength = (int) new File(Blanks.CONTENT_DIRECTORY, requestedRoute).length();
         }
 
         composeResponse(Codes.OK, contentType, contentLength);
@@ -182,6 +183,8 @@ public class HttpConnection implements Runnable {
         } else {
             File sendingFile = new File(Blanks.CONTENT_DIRECTORY, content);
             contentLength = (int) sendingFile.length();
+
+            if(!sendingFile.exists()) { throw new FileNotFoundException(); }
 
             byteData = readFileData(sendingFile, contentLength);
         }
@@ -290,13 +293,17 @@ public class HttpConnection implements Runnable {
         }
     }
 
-    public String getFileName() {
-        return this.fileName;
+    private boolean checkHttpVersion(String httpVersion) {
+        return httpVersion.equals(Blanks.HTTP_VERSION);
     }
 
     private void writeMap(Map<String, String> headers) {
         for (Map.Entry<String, String> pair : headers.entrySet()) {
             logger.info(pair.getKey() + ": " + pair.getValue());
         }
+    }
+
+    public String getFileName() {
+        return this.requestedRoute;
     }
 }

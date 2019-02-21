@@ -3,16 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <title>DiJey HTTP Server</title>
+    <script src="https://cdn.jsdelivr.net/npm/node-forge@0.7.0/dist/forge.min.js"></script>
 </head>
 <body>
 <h3>Hey, bro, check HEAD</h3>
 <input type="button" value="The prettiest button ever" onclick="sendHead(event)" />
 <script>
+    function encrypt(data) {
+        var key = forge.random.getBytesSync(16);
+        var iv = forge.random.getBytesSync(16);
+
+        var cipher = forge.rc2.createEncryptionCipher(key);
+        cipher.start(iv);
+        cipher.update(forge.util.createBuffer(data));
+        cipher.finish();
+        var encrypted = cipher.output;
+        return encrypted.toHex();
+    }
+
     function sendHead(event) {
         event.preventDefault();
-        var url = "http://localhost:3001/head-request";
-        fetch(url, {
-            method : "HEAD"
+        var URL = "http://localhost:3001/head-reqst";
+
+        var data = "DiJey duet is the best!";
+        var encryptedInfo = encrypt(data);
+
+        fetch(URL, {
+            method : "HEAD",
+            headers: {
+                "Authorization": "Bearer " + encryptedInfo,
+            },
         });
     }
 </script>
