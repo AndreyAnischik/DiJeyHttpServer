@@ -28,7 +28,7 @@ public class HttpConnection implements Runnable {
     private BufferedReader clientData = null;
     private PrintWriter serverData = null;
     private BufferedOutputStream dataOut = null;
-    private String fileName = null;
+    private String requestedRoute = null;
     private Logger logger = Logger.getLogger(HttpConnection.class);
 
     public HttpConnection(HttpServer server, Socket socket) {
@@ -54,13 +54,20 @@ public class HttpConnection implements Runnable {
                     String input = clientData.readLine();
                     StringTokenizer parsedData = new StringTokenizer(input);
                     String method = parsedData.nextToken().toUpperCase();
-                    logger.info(method);
+
+                    requestedRoute = parsedData.nextToken();
+
+                    if (!checkHttpVersion(parsedData.nextToken().toUpperCase())) {
+                        sendNotSupportedHttpVersion();
+                        return;
+                    }
+
+                    logger.info(input);
 
                     StringBuffer requestBody = parse();
                     HashMap<String, String> headers = parseHeaders(requestBody);
                     writeMap(headers);
 
-                    String requestedRoute = parsedData.nextToken();
                     if (headers.get("Authorization") == null &&
                             !Arrays.stream(PROTECTED_ROUTES).anyMatch(requestedRoute::equals)
                     ) {
@@ -101,6 +108,11 @@ public class HttpConnection implements Runnable {
     private void sendNotImplemented() throws IOException {
         String notImplemented = Blanks.NOT_IMPLEMENTED_PAGE;
         setDataToResponse(Codes.NOT_IMPLEMENTED, notImplemented);
+    }
+
+    private void sendNotSupportedHttpVersion() throws IOException {
+        String notSupportedHttpVersion = Blanks.HTTP_VERSION_NOT_SUPPORTED;
+        setDataToResponse(Codes.HTTP_VERSION_NOT_SUPPORTED, notSupportedHttpVersion);
     }
 
     private void post(String requestedRoute, StringBuffer stringBuffer) throws IOException {
@@ -145,7 +157,7 @@ public class HttpConnection implements Runnable {
     }
 
     private void head(String requestedRoute) throws IOException {
-        fileName = requestedRoute.toLowerCase();
+        String fileName = requestedRoute.toLowerCase();
         String contentType = getContentType(fileName);
 
         int contentLength;
@@ -197,10 +209,6 @@ public class HttpConnection implements Runnable {
     }
 
     public void stop() {
-        if (!Thread.currentThread().isInterrupted()) {
-            Thread.currentThread().interrupt();
-        }
-
         try {
             clientData.close();
             serverData.close();
@@ -208,6 +216,10 @@ public class HttpConnection implements Runnable {
             socket.close();
         } catch (IOException e) {
             logger.error("Error closing connection");
+        }
+
+        if (!Thread.currentThread().isInterrupted()) {
+            Thread.currentThread().interrupt();
         }
     }
 
@@ -279,7 +291,11 @@ public class HttpConnection implements Runnable {
     }
 
     public String getFileName() {
-        return this.fileName;
+        return this.requestedRoute;
+    }
+
+    private boolean checkHttpVersion(String httpVersion) {
+        return httpVersion.equals(Blanks.HTTP_VERSION);
     }
 
     private void writeMap(Map<String, String> headers) {

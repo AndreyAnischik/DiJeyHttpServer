@@ -30,9 +30,9 @@ public class HttpServer implements Runnable {
         }
 
         if (!Thread.currentThread().isInterrupted()) {
-            Thread.currentThread().interrupt();
             serverSocket.close();
             logger.info("Server was stopped.");
+            Thread.currentThread().interrupt();
         }
     }
 
