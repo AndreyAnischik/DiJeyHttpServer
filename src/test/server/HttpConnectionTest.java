@@ -190,6 +190,7 @@ public class HttpConnectionTest {
         assertTrue(sendingContent.contains(initialContent));
     }
 
+    @Test
     public void reproduceUnauthorized() throws IOException {
         final String REQUEST_CONTENT = "POST /not_existed_helper.rb/fake-post HTTP/1.1\r\n" +
                 "Accept-Encoding: gzip, deflate, br\r\n" +
@@ -209,6 +210,28 @@ public class HttpConnectionTest {
 
         assertTrue(sendingContent.contains("HTTP/1.1 " + Codes.UNAUTHORIZED));
         assertTrue(sendingContent.contains("Content-type: text/plain"));
+        assertTrue(sendingContent.contains("Content-length: " + initialContent.length()));
+        assertTrue(sendingContent.contains(initialContent));
+    }
+
+    @Test
+    public void reproduceForbidden() throws IOException {
+        final String REQUEST_CONTENT = "GET /forbidden_file.html HTTP/1.1\r\n" +
+                "Accept-Encoding: gzip, deflate, br\r\n";
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        Mockito.doReturn(new ByteArrayInputStream(REQUEST_CONTENT.getBytes())).when(socket).getInputStream();
+        Mockito.doReturn(baos).when(socket).getOutputStream();
+
+        HttpConnection connection = new HttpConnection(httpServer, socket);
+        connection.handleResponse();
+
+        String initialContent = getInitialContent(Blanks.FORBIDDEN_FILE);
+        String sendingContent = baos.toString();
+
+        assertTrue(sendingContent.contains("HTTP/1.1 " + Codes.FORBIDDEN));
+        assertTrue(sendingContent.contains("Content-type: text/html"));
         assertTrue(sendingContent.contains("Content-length: " + initialContent.length()));
         assertTrue(sendingContent.contains(initialContent));
     }
