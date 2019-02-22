@@ -26,6 +26,6 @@ public class HeadCommand implements Command {
             contentLength = (int) new File(Blanks.CONTENT_DIRECTORY, requestedRoute).length();
         }
 
-        responseHandler.composeResponse(Codes.OK, contentType, contentLength);
+        responseHandler.composeResponse(fileName, Codes.OK, contentType, contentLength);
     }
 }

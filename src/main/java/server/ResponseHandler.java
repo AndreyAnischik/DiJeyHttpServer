@@ -1,12 +1,17 @@
 package server;
 
 import constants.Blanks;
+import constants.Codes;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.log4j.Logger;
 
 import java.io.*;
 import java.util.*;
 
 public class ResponseHandler {
+    private Dotenv dotenv = Dotenv.configure().directory("./").load();
+
+    private int port;
     private BufferedReader clientData;
     private PrintWriter serverData;
     private BufferedOutputStream dataOut;
@@ -32,20 +37,27 @@ public class ResponseHandler {
             byteData = readFileData(sendingFile, contentLength);
         }
 
-        composeResponse(code, contentType, contentLength);
+        composeResponse(content, code, contentType, contentLength);
 
         logger.info(new String(byteData));
         dataOut.write(byteData, 0, contentLength);
         dataOut.flush();
     }
 
-    public void composeResponse(String code, String contentType, int contentLength) {
+    public void composeResponse(String content, String code, String contentType, int contentLength) {
         List<String> headers = new ArrayList<>();
         headers.add("HTTP/1.1 " + code);
         headers.add("Server: Java http server by DiJey");
         headers.add("Date: " + new Date());
         headers.add("Content-type: " + contentType);
         headers.add("Content-length: " + contentLength);
+        if (code.equals(Codes.MOVED)) {
+            headers.add("Location: " +
+                    dotenv.get("BASE_URL") + ":" +
+                    port +
+                    content
+            );
+        }
         for (String header : headers) {
             logger.info(header);
             serverData.println(header);
@@ -137,5 +149,9 @@ public class ResponseHandler {
 
     public void setDataOut(BufferedOutputStream dataOut) {
         this.dataOut = dataOut;
+    }
+
+    public void setPort(int port) {
+        this.port = port;
     }
 }

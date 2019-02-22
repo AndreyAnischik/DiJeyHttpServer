@@ -14,6 +14,7 @@ import static constants.Blanks.PROTECTED_ROUTES;
 
 public class HttpConnection implements Runnable {
     private Socket socket;
+    private HttpServer server;
     private BufferedReader clientData;
     private PrintWriter serverData;
     private BufferedOutputStream dataOut;
@@ -23,7 +24,8 @@ public class HttpConnection implements Runnable {
 
     private Logger logger = Logger.getLogger(HttpConnection.class);
 
-    public HttpConnection(Socket socket) {
+    public HttpConnection(HttpServer server, Socket socket) {
+        this.server = server;
         this.socket = socket;
         initStreams();
         composeResponseHandler();
@@ -52,10 +54,10 @@ public class HttpConnection implements Runnable {
         responseHandler.setClientData(clientData);
         responseHandler.setDataOut(dataOut);
         responseHandler.setServerData(serverData);
+        responseHandler.setPort(server.getServerPort());
     }
 
     private void initCommands() {
-
         commandMap = new LinkedHashMap<>();
         commandMap.put(Methods.GET, new GetCommand(responseHandler));
         commandMap.put(Methods.POST, new PostCommand(responseHandler));
@@ -92,6 +94,22 @@ public class HttpConnection implements Runnable {
                     String badRequestRegex = "\\d+";
                     if (requestedRoute.substring(1).matches(badRequestRegex)) {
                         responseHandler.setDataToResponse(Codes.BAD_REQUEST, "Bad Request.");
+                        return;
+                    }
+
+                    if (server.getMovedUrl(requestedRoute) != null) {
+                        responseHandler.setDataToResponse(
+                            Codes.MOVED,
+                            server.getMovedUrl(requestedRoute)
+                        );
+                        return;
+                    }
+
+                    if (server.getFoundUrl(requestedRoute) != null) {
+                        responseHandler.setDataToResponse(
+                            Codes.FOUND,
+                            "This page was temporarily moved to " + server.getFoundUrl(requestedRoute) + " page."
+                        );
                         return;
                     }
 
