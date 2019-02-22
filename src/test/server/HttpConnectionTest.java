@@ -25,31 +25,6 @@
 //    }
 //
 //    @Test
-//    public void getTesting() throws IOException {
-//        final String REQUEST_CONTENT = "GET /index.html HTTP/1.1\r\n" +
-//                "Authorization: secrets-secrets-secrets\r\n" +
-//                "Accept-Encoding: gzip, deflate, br\r\n";
-//
-//        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-//
-//        Mockito.doReturn(new ByteArrayInputStream(REQUEST_CONTENT.getBytes())).when(socket).getInputStream();
-//        Mockito.doReturn(baos).when(socket).getOutputStream();
-//
-//        HttpConnection connection = new HttpConnection(httpServer, socket);
-//        connection.handleResponse();
-//
-//        String fileName = connection.getFileName();
-//
-//        String initialContent = getInitialContent(fileName);
-//        String sendingContent = baos.toString();
-//
-//        assertTrue(sendingContent.contains("HTTP/1.1 " + Codes.OK));
-//        assertTrue(sendingContent.contains("Content-type: text/html"));
-//        assertTrue(sendingContent.contains("Content-length: " + initialContent.length()));
-//        assertTrue(sendingContent.contains(initialContent));
-//    }
-//
-//    @Test
 //    public void deleteTesting() throws IOException {
 //        final String REQUEST_CONTENT = "DELETE /some_path HTTP/1.1\r\n" +
 //                "Authorization: secrets-secrets-secrets\r\n";

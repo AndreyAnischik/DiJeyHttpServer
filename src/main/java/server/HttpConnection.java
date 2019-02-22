@@ -137,6 +137,10 @@ public class HttpConnection implements Runnable {
         return httpVersion.equals(Blanks.HTTP_VERSION);
     }
 
+    public String getRoute() {
+        return this.requestedRoute;
+    }
+
     public void stop() {
         try {
             clientData.close();
