@@ -89,6 +89,12 @@ public class HttpConnection implements Runnable {
                         return;
                     }
 
+                    String badRequestRegex = "\\d+";
+                    if (requestedRoute.substring(1).matches(badRequestRegex)) {
+                        responseHandler.setDataToResponse(Codes.BAD_REQUEST, "Bad Request.");
+                        return;
+                    }
+
                     if (headers.get("Authorization") == null &&
                             !Arrays.stream(PROTECTED_ROUTES).anyMatch(requestedRoute::equals)
                     ) {
@@ -107,10 +113,10 @@ public class HttpConnection implements Runnable {
             try {
                 fileNotFound();
             } catch (IOException ioException) {
-                logger.error("I/O error occurs while sending fileNotFound");
+                logger.error("I/O error occurs while sending fileNotFound.");
             }
         } catch (IOException exception) {
-            logger.error("I/O error occurs while waiting for request");
+            logger.error("I/O error occurs while waiting for request.");
         }
     }
 
@@ -148,7 +154,7 @@ public class HttpConnection implements Runnable {
             dataOut.close();
             socket.close();
         } catch (IOException e) {
-            logger.error("Error closing connection");
+            logger.error("Error closing connection.");
         }
 
         if (!Thread.currentThread().isInterrupted()) {
