@@ -62,7 +62,6 @@ public class HttpConnection implements Runnable {
         commandMap.put(Methods.GET, new GetCommand(responseHandler));
         commandMap.put(Methods.POST, new PostCommand(responseHandler));
         commandMap.put(Methods.HEAD, new HeadCommand(responseHandler));
-        commandMap.put(Methods.DEFAULT, new DefaultCommand(responseHandler));
     }
 
     public void handleResponse() {
@@ -99,16 +98,16 @@ public class HttpConnection implements Runnable {
 
                     if (server.getMovedUrl(requestedRoute) != null) {
                         responseHandler.setDataToResponse(
-                            Codes.MOVED,
-                            server.getMovedUrl(requestedRoute)
+                                Codes.MOVED,
+                                server.getMovedUrl(requestedRoute)
                         );
                         return;
                     }
 
                     if (server.getFoundUrl(requestedRoute) != null) {
                         responseHandler.setDataToResponse(
-                            Codes.FOUND,
-                            "This page was temporarily moved to " + server.getFoundUrl(requestedRoute) + " page."
+                                Codes.FOUND,
+                                "This page was temporarily moved to " + server.getFoundUrl(requestedRoute) + " page."
                         );
                         return;
                     }
@@ -119,12 +118,7 @@ public class HttpConnection implements Runnable {
                         responseHandler.setDataToResponse(Codes.UNAUTHORIZED, "You are now allowed. Log in, please.");
                         return;
                     }
-
-                    if (commandMap.containsKey(method)) {
-                        commandMap.get(method).execute(requestedRoute, requestBody);
-                    } else {
-                        commandMap.get(Methods.DEFAULT).execute(requestedRoute, requestBody);
-                    }
+                    commandMap.getOrDefault(method, new Command(responseHandler)).execute(requestedRoute, requestBody);
                 }
             }
         } catch (FileNotFoundException fileException) {
