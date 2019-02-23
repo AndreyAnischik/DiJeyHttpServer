@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class PostCommand extends Command {
-
     public PostCommand(ResponseHandler responseHandler) {
         super(responseHandler);
     }

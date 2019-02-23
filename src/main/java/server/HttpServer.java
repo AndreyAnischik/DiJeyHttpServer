@@ -2,8 +2,7 @@ package server;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import org.apache.log4j.Logger;
-import server.mappers.PermanentlyPageMapper;
-import server.mappers.TemporarilyPageMapper;
+import server.mappers.PageMapper;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -14,15 +13,13 @@ public class HttpServer implements Runnable {
 
     private ServerSocket serverSocket;
     private ConnectionManager connectionsManager;
-    private TemporarilyPageMapper temporarilyPageMapper;
-    private PermanentlyPageMapper permanentlyPageMapper;
+    private PageMapper pageMapper;
     private Logger logger = Logger.getLogger(HttpServer.class);
 
     public HttpServer(int port) throws IOException {
         this.serverSocket = new ServerSocket(port, Integer.valueOf(dotenv.get("BACKLOG")));
         this.connectionsManager = new ConnectionManager();
-        this.permanentlyPageMapper = new PermanentlyPageMapper();
-        this.temporarilyPageMapper = new TemporarilyPageMapper();
+        this.pageMapper = new PageMapper();
     }
 
     @Override
@@ -43,11 +40,11 @@ public class HttpServer implements Runnable {
     }
 
     public String getMovedUrl(String oldUrl) {
-        return permanentlyPageMapper.getMovedUrl(oldUrl);
+        return pageMapper.getMovedUrl(oldUrl);
     }
 
     public String getFoundUrl(String oldUrl) {
-        return temporarilyPageMapper.getFoundUrl(oldUrl);
+        return pageMapper.getFoundUrl(oldUrl);
     }
 
     private void runServer() {

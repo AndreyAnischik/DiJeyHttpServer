@@ -23,6 +23,7 @@ public class HttpConnection implements Runnable {
     private Map<String, Command> commandMap;
 
     private Logger logger = Logger.getLogger(HttpConnection.class);
+    private final String BAD_REQUEST_REGEX = "\\d+";
 
     public HttpConnection(HttpServer server, Socket socket) {
         this.server = server;
@@ -90,8 +91,7 @@ public class HttpConnection implements Runnable {
                         return;
                     }
 
-                    String badRequestRegex = "\\d+";
-                    if (requestedRoute.substring(1).matches(badRequestRegex)) {
+                    if (requestedRoute.substring(1).matches(BAD_REQUEST_REGEX)) {
                         responseHandler.setDataToResponse(Codes.BAD_REQUEST, "Bad Request.");
                         return;
                     }
@@ -118,6 +118,7 @@ public class HttpConnection implements Runnable {
                         responseHandler.setDataToResponse(Codes.UNAUTHORIZED, "You are now allowed. Log in, please.");
                         return;
                     }
+
                     commandMap.getOrDefault(method, new Command(responseHandler)).execute(requestedRoute, requestBody);
                 }
             }
