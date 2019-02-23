@@ -17,7 +17,7 @@ public class ResponseHandler {
     private BufferedOutputStream dataOut;
     private static Logger logger = Logger.getLogger(ResponseHandler.class);
 
-    public void setDataToResponse(String code, String content) throws IOException {
+    public void setDataToResponse(int code, String content) throws IOException {
         byte[] byteData;
         int contentLength;
 
@@ -44,14 +44,14 @@ public class ResponseHandler {
         dataOut.flush();
     }
 
-    public void composeResponse(String content, String code, String contentType, int contentLength) {
+    public void composeResponse(String content, int code, String contentType, int contentLength) {
         List<String> headers = new ArrayList<>();
         headers.add("HTTP/1.1 " + code);
         headers.add("Server: Java http server by DiJey");
         headers.add("Date: " + new Date());
         headers.add("Content-type: " + contentType);
         headers.add("Content-length: " + contentLength);
-        if (code.equals(Codes.MOVED)) {
+        if (code == Codes.MOVED) {
             headers.add("Location: " +
                     dotenv.get("BASE_URL") + ":" +
                     port +
