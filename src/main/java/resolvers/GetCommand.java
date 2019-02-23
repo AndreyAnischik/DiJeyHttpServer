@@ -5,11 +5,9 @@ import server.ResponseHandler;
 
 import java.io.IOException;
 
-public class GetCommand implements Command {
-    private ResponseHandler responseHandler;
-
+public class GetCommand extends Command {
     public GetCommand(ResponseHandler responseHandler) {
-        this.responseHandler = responseHandler;
+        super(responseHandler);
     }
 
     @Override

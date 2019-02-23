@@ -18,12 +18,9 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class PostCommand implements Command {
-
-    private ResponseHandler responseHandler;
-
+public class PostCommand extends Command {
     public PostCommand(ResponseHandler responseHandler) {
-        this.responseHandler = responseHandler;
+        super(responseHandler);
     }
 
     @Override

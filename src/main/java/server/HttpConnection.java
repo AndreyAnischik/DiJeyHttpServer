@@ -23,6 +23,7 @@ public class HttpConnection implements Runnable {
     private Map<String, Command> commandMap;
 
     private Logger logger = Logger.getLogger(HttpConnection.class);
+    private final String BAD_REQUEST_REGEX = "\\d+";
 
     public HttpConnection(HttpServer server, Socket socket) {
         this.server = server;
@@ -62,7 +63,6 @@ public class HttpConnection implements Runnable {
         commandMap.put(Methods.GET, new GetCommand(responseHandler));
         commandMap.put(Methods.POST, new PostCommand(responseHandler));
         commandMap.put(Methods.HEAD, new HeadCommand(responseHandler));
-        commandMap.put(Methods.DEFAULT, new DefaultCommand(responseHandler));
     }
 
     public void handleResponse() {
@@ -91,24 +91,23 @@ public class HttpConnection implements Runnable {
                         return;
                     }
 
-                    String badRequestRegex = "\\d+";
-                    if (requestedRoute.substring(1).matches(badRequestRegex)) {
+                    if (requestedRoute.substring(1).matches(BAD_REQUEST_REGEX)) {
                         responseHandler.setDataToResponse(Codes.BAD_REQUEST, "Bad Request.");
                         return;
                     }
 
                     if (server.getMovedUrl(requestedRoute) != null) {
                         responseHandler.setDataToResponse(
-                            Codes.MOVED,
-                            server.getMovedUrl(requestedRoute)
+                                Codes.MOVED,
+                                server.getMovedUrl(requestedRoute)
                         );
                         return;
                     }
 
                     if (server.getFoundUrl(requestedRoute) != null) {
                         responseHandler.setDataToResponse(
-                            Codes.FOUND,
-                            "This page was temporarily moved to " + server.getFoundUrl(requestedRoute) + " page."
+                                Codes.FOUND,
+                                "This page was temporarily moved to " + server.getFoundUrl(requestedRoute) + " page."
                         );
                         return;
                     }
@@ -120,11 +119,7 @@ public class HttpConnection implements Runnable {
                         return;
                     }
 
-                    if (commandMap.containsKey(method)) {
-                        commandMap.get(method).execute(requestedRoute, requestBody);
-                    } else {
-                        commandMap.get(Methods.DEFAULT).execute(requestedRoute, requestBody);
-                    }
+                    commandMap.getOrDefault(method, new Command(responseHandler)).execute(requestedRoute, requestBody);
                 }
             }
         } catch (FileNotFoundException fileException) {

@@ -7,11 +7,9 @@ import server.ResponseHandler;
 import java.io.File;
 import java.io.IOException;
 
-public class HeadCommand implements Command {
-    private ResponseHandler responseHandler;
-
+public class HeadCommand extends Command {
     public HeadCommand(ResponseHandler responseHandler) {
-        this.responseHandler = responseHandler;
+        super(responseHandler);
     }
 
     @Override
