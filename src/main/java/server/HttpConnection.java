@@ -40,31 +40,6 @@ public class HttpConnection implements Runnable {
         }
     }
 
-    private void initStreams() {
-        try {
-            clientData = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            serverData = new PrintWriter(socket.getOutputStream());
-            dataOut = new BufferedOutputStream(socket.getOutputStream());
-        } catch (IOException e) {
-            logger.error("Creating stream.");
-        }
-    }
-
-    private void composeResponseHandler() {
-        responseHandler = new ResponseHandler();
-        responseHandler.setClientData(clientData);
-        responseHandler.setDataOut(dataOut);
-        responseHandler.setServerData(serverData);
-        responseHandler.setPort(server.getServerPort());
-    }
-
-    private void initCommands() {
-        commandMap = new LinkedHashMap<>();
-        commandMap.put(Methods.GET, new GetCommand(responseHandler));
-        commandMap.put(Methods.POST, new PostCommand(responseHandler));
-        commandMap.put(Methods.HEAD, new HeadCommand(responseHandler));
-    }
-
     public void handleResponse() {
         try {
             if (!socket.isClosed()) {
@@ -93,6 +68,11 @@ public class HttpConnection implements Runnable {
 
                     if (requestedRoute.substring(1).matches(BAD_REQUEST_REGEX)) {
                         responseHandler.setDataToResponse(Codes.BAD_REQUEST, "Bad Request.");
+                        return;
+                    }
+
+                    if (checkAcceptability()) {
+                        responseHandler.setDataToResponse(Codes.NOT_ACCEPTABLE, "Wrong format.");
                         return;
                     }
 
@@ -133,29 +113,6 @@ public class HttpConnection implements Runnable {
         }
     }
 
-    private void sendForbidden() throws IOException {
-        String forbidden = Blanks.FORBIDDEN_FILE;
-        responseHandler.setDataToResponse(Codes.FORBIDDEN, forbidden);
-    }
-
-    private boolean checkForbiddenFile(String requestedRoute) {
-        return requestedRoute.equals(Blanks.FORBIDDEN_FILE);
-    }
-
-    private void sendNotSupportedHttpVersion() throws IOException {
-        String notSupportedHttpVersion = Blanks.HTTP_VERSION_NOT_SUPPORTED;
-        responseHandler.setDataToResponse(Codes.HTTP_VERSION_NOT_SUPPORTED, notSupportedHttpVersion);
-    }
-
-    private void fileNotFound() throws IOException {
-        String notFound = Blanks.NOT_FOUND_PAGE;
-        responseHandler.setDataToResponse(Codes.NOT_FOUND, notFound);
-    }
-
-    private boolean checkHttpVersion(String httpVersion) {
-        return httpVersion.equals(Blanks.HTTP_VERSION);
-    }
-
     public String getRoute() {
         return this.requestedRoute;
     }
@@ -173,5 +130,54 @@ public class HttpConnection implements Runnable {
         if (!Thread.currentThread().isInterrupted()) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    private void initStreams() {
+        try {
+            clientData = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            serverData = new PrintWriter(socket.getOutputStream());
+            dataOut = new BufferedOutputStream(socket.getOutputStream());
+        } catch (IOException e) {
+            logger.error("Creating stream.");
+        }
+    }
+
+    private void composeResponseHandler() {
+        responseHandler = new ResponseHandler();
+        responseHandler.setClientData(clientData);
+        responseHandler.setDataOut(dataOut);
+        responseHandler.setServerData(serverData);
+        responseHandler.setPort(server.getServerPort());
+    }
+
+    private void initCommands() {
+        commandMap = new LinkedHashMap<>();
+        commandMap.put(Methods.GET, new GetCommand(responseHandler));
+        commandMap.put(Methods.POST, new PostCommand(responseHandler));
+        commandMap.put(Methods.HEAD, new HeadCommand(responseHandler));
+    }
+
+    private void sendForbidden() throws IOException {
+        responseHandler.setDataToResponse(Codes.FORBIDDEN, Blanks.FORBIDDEN_FILE);
+    }
+
+    private boolean checkForbiddenFile(String requestedRoute) {
+        return requestedRoute.equals(Blanks.FORBIDDEN_FILE);
+    }
+
+    private void sendNotSupportedHttpVersion() throws IOException {
+        responseHandler.setDataToResponse(Codes.HTTP_VERSION_NOT_SUPPORTED, Blanks.HTTP_VERSION_NOT_SUPPORTED);
+    }
+
+    private void fileNotFound() throws IOException {
+        responseHandler.setDataToResponse(Codes.NOT_FOUND, Blanks.NOT_FOUND_PAGE);
+    }
+
+    private boolean checkHttpVersion(String httpVersion) {
+        return httpVersion.equals(Blanks.HTTP_VERSION);
+    }
+
+    private boolean checkAcceptability() {
+        return requestedRoute.endsWith(".pdf");
     }
 }

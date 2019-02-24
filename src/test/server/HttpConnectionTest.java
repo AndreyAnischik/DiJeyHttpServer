@@ -164,6 +164,28 @@ public class HttpConnectionTest {
         assertTrue(sendingContent.contains(initialContent));
     }
 
+    @Test
+    public void reproduceWrongFormat() throws IOException {
+        final String REQUEST_CONTENT = "GET /index.pdf HTTP/1.1\r\n" +
+                "Accept-Encoding: gzip, deflate, br\r\n";
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+
+        Mockito.doReturn(new ByteArrayInputStream(REQUEST_CONTENT.getBytes())).when(socket).getInputStream();
+        Mockito.doReturn(baos).when(socket).getOutputStream();
+
+        HttpConnection connection = new HttpConnection(httpServer, socket);
+        connection.handleResponse();
+
+        String finalContent = "Wrong format.";
+        String sendingContent = baos.toString();
+
+        assertTrue(sendingContent.contains("HTTP/1.1 " + Codes.NOT_ACCEPTABLE));
+        assertTrue(sendingContent.contains("Content-type: text/plain"));
+        assertTrue(sendingContent.contains("Content-length: " + finalContent.length()));
+        assertTrue(sendingContent.contains(finalContent));
+    }
+
     private String getInitialContent(String fileName){
         StringBuilder contentBuilder = new StringBuilder();
         try {
