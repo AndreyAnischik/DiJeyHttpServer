@@ -37,18 +37,6 @@
             <version>1.7.4</version>
         </dependency>
         <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-core</artifactId>
-            <version>2.5.3</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.5.3</version>
-            <scope>compile</scope>
-        </dependency>
-        <dependency>
             <groupId>de.saxsys</groupId>
             <artifactId>jfx-testrunner</artifactId>
             <version>1.2</version>

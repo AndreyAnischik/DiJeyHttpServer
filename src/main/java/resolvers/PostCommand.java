@@ -1,6 +1,5 @@
 package resolvers;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import constants.Blanks;
 import constants.Codes;
 import server.ResponseHandler;
@@ -33,7 +32,6 @@ public class PostCommand extends Command {
         try {
             Path currentRelativePath = Paths.get(Blanks.SCRIPTS_DIRECTORY + requestDestination[0]);
             String methodName = requestDestination[1].replace('-', '_');
-            String jsonParams = new ObjectMapper().writeValueAsString(paramsHash);
 
             ScriptEngine jruby = new ScriptEngineManager().getEngineByName("jruby");
             jruby.eval(Files.newBufferedReader(currentRelativePath, StandardCharsets.UTF_8));
@@ -45,7 +43,7 @@ public class PostCommand extends Command {
                 TimeoutBlock timeoutBlock = new TimeoutBlock(5000);
                 Runnable block = () -> {
                     try {
-                        scriptResult.set((String) invokableJrubyIns.invokeFunction(methodName, jsonParams));
+                        scriptResult.set((String) invokableJrubyIns.invokeFunction(methodName, paramsHash));
                     } catch (NoSuchMethodException | ScriptException e) {
                         e.printStackTrace();
                     }
