@@ -36,10 +36,10 @@ public final class TextAreaAppender extends AppenderSkeleton {
         Platform.runLater(() -> logArea.appendText(message));
         ThrowableInformation throwableInformation = logEvent.getThrowableInformation();
         if (throwableInformation != null) {
-            Writer wr = new StringWriter();
-            PrintWriter printWriter = new PrintWriter(wr);
+            Writer traceWriter = new StringWriter();
+            PrintWriter printWriter = new PrintWriter(traceWriter);
             throwableInformation.getThrowable().printStackTrace(printWriter);
-            Platform.runLater(() -> logArea.appendText(wr.toString()));
+            Platform.runLater(() -> logArea.appendText(traceWriter.toString()));
         }
     }
 
