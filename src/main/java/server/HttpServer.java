@@ -56,7 +56,7 @@ public class HttpServer implements Runnable {
             connectionsManager.add(session);
             new Thread(session).start();
         } catch (IOException e) {
-            logger.error("I/O error occurs while waiting for a connection.");
+            logger.error("I/O error occurs while waiting for a connection", e);
         }
     }
 

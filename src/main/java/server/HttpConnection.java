@@ -106,10 +106,10 @@ public class HttpConnection implements Runnable {
             try {
                 fileNotFound();
             } catch (IOException ioException) {
-                logger.error("I/O error occurs while sending fileNotFound.");
+                logger.error("I/O error occurs while sending fileNotFound.", ioException);
             }
         } catch (IOException exception) {
-            logger.error("I/O error occurs while waiting for request.");
+            logger.error("I/O error occurs while waiting for request.", exception);
         }
     }
 
@@ -124,7 +124,7 @@ public class HttpConnection implements Runnable {
             dataOut.close();
             socket.close();
         } catch (IOException e) {
-            logger.error("Error closing connection.");
+            logger.error("Error closing connection.", e);
         }
 
         if (!Thread.currentThread().isInterrupted()) {
@@ -138,7 +138,7 @@ public class HttpConnection implements Runnable {
             serverData = new PrintWriter(socket.getOutputStream());
             dataOut = new BufferedOutputStream(socket.getOutputStream());
         } catch (IOException e) {
-            logger.error("Creating stream.");
+            logger.error("Error while creating stream.", e);
         }
     }
 
