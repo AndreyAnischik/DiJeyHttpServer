@@ -32,7 +32,7 @@ public class Communication implements Initializable {
                     httpServer = new HttpServer(Integer.valueOf(serverPort.getText()));
                     new Thread(httpServer).start();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error("Error while starting server", e);
                 }
             } else {
                 logger.info("Server is already running.");

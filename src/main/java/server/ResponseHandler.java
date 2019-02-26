@@ -74,13 +74,13 @@ public class ResponseHandler {
             fileIn = new FileInputStream(file);
             fileIn.read(fileData);
         } catch (IOException e) {
-            logger.info("Error reading file");
+            logger.error("Error while reading file.", e);
         } finally {
             if (fileIn != null) {
                 try {
                     fileIn.close();
                 } catch (IOException e) {
-                    logger.error("Error closing file");
+                    logger.error("Error while closing file.", e);
                 }
             }
         }
