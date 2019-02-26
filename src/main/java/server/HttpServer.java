@@ -31,9 +31,10 @@ public class HttpServer implements Runnable {
         for (HttpConnection httpConnection : connectionsManager.getConnections()) {
             httpConnection.stop();
         }
+        
+        serverSocket.close();
 
         if (!Thread.currentThread().isInterrupted()) {
-            serverSocket.close();
             logger.info("Server was stopped.");
             Thread.currentThread().interrupt();
         }
@@ -60,7 +61,7 @@ public class HttpServer implements Runnable {
         }
     }
 
-    public int getServerPort(){
+    public int getServerPort() {
         return serverSocket.getLocalPort();
     }
 }
