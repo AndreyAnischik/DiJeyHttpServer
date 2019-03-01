@@ -18,7 +18,7 @@ public class HttpServer implements Runnable {
     private Logger logger = Logger.getLogger(HttpServer.class);
 
     public HttpServer(int port) throws IOException {
-        this.serverSocket = new ServerSocket(port, Integer.valueOf(dotenv.get("BACKLOG")));
+        this.serverSocket = new ServerSocket(port, Integer.valueOf(dotenv.get("BACKLOG")), InetAddress.getLocalHost());
         this.connectionsManager = new ConnectionManager();
         this.pageMapper = new PageMapper();
     }
