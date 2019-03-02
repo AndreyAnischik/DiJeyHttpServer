@@ -17,6 +17,12 @@ public class ResponseHandler {
     private BufferedOutputStream dataOut;
     private static Logger logger = Logger.getLogger(ResponseHandler.class);
 
+    /**
+     * Этот публичный метод используется для составления ответа DiJey сервера.
+     * @param code Код ответа
+     * @param content Содержимое ответа
+     * @throws IOException Выбрасывает I/O исключение, в случае ошибки при записи в выходной поток
+     */
     public void setDataToResponse(int code, String content) throws IOException {
         byte[] byteData;
         int contentLength;
@@ -66,6 +72,13 @@ public class ResponseHandler {
         serverData.flush();
     }
 
+
+    /**
+     * Этот приватный метод используется для чтения данных из запрашиваемого файла.
+     * @param file Запрашиваемый файл
+     * @param fileLength Длина запрашиваемого файла
+     * @return byte[] Массив байт, которыми представлен файл
+     */
     private byte[] readFileData(File file, int fileLength) {
         FileInputStream fileIn = null;
         byte[] fileData = new byte[fileLength];

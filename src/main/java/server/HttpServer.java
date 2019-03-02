@@ -49,7 +49,10 @@ public class HttpServer implements Runnable {
         return pageMapper.getFoundUrl(oldUrl);
     }
 
-    private void runServer() {
+    /**
+     * Этот защищенный метод используется для запуска сервера.
+     */
+    protected void runServer() {
         logger.info("Server is running on " + serverSocket.getLocalPort() + " port.");
 
         try {
